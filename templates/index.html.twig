@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <form action="{{ path('app_default_simulate') }}">
+        <h3>Enter transfer ID and click Submit button to simulate sending</h3>
+        <input name="transferId" type="text">
+
+        <input type="submit">
+    </form>
+
+    <h3>Click <a href="{{ path('app_default_simulateall') }}">this link</a> to simulate all available transfers</h3>
+    <h3>Click <a href="{{ path('app_default_sync') }}">this link</a> sync all sent transfers from TransferWise to
+        SmartAccounts</h3>
+{% endblock %}

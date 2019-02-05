@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <p>Successful imports: <b>{{ imported | length }}</b></p>
+    <p>Skipped records: <b>{{ skipped | length }}</b></p>
+    <p>Errors: <b>{{ errors | length }}</b></p>
+    <ul>
+        {% for key, messages in errors %}
+            {% for message in messages %}
+                <li><b>{{ key }}</b> - {{ message }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+{% endblock %}

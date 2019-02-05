@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <ul>
+        {% for transfer in transfers %}
+            <li>Transfer <b>#{{ transfer.id }}</b> for <b>{{ transfer.sourceValue }} {{ transfer.sourceCurrency }}</b>
+                simulated.
+                Now have status <b>{{ transfer.status }}</b></li>
+        {% endfor %}
+    </ul>
+    <p>Transfers updated: <b>{{ updatedCount }}</b></p>
+    <p>Transfers skipped: <b>{{ skippedCount }}</b></p>
+{% endblock %}
