@@ -66,7 +66,7 @@ class SyncRecordController extends AbstractController
     }
 
     /**
-     * @Route("/{id}", name="sync_record_show", methods={"GET"})
+     * @Route("/{id}", name="sync_record_show", methods={"GET"}, requirements={"id"="\d"})
      */
     public function show(SyncRecord $syncRecord): Response
     {
@@ -124,17 +124,21 @@ class SyncRecordController extends AbstractController
 
         $syncResult = $syncService->sync($syncRecord);
 
-        return new Response(print_r($syncResult, true));
+        return $this->render('sync.html.twig', array(
+            'imported' => $syncResult->getImported(),
+            'skipped' => $syncResult->getSkipped(),
+            'errors' => $syncResult->getErrors()
+        ));
     }
 
     /**
-     * @Route("/run-all", name="sync_run_all")
+     * @Route("/run-all", name="sync_run_all", methods={"GET"})
      */
     public function runAll(Request $request): Response
     {
         $syncService = $this->getSyncService();
 
-        $syncRecords = $this->getDoctrine()->getManager()->getRepository(SyncRecordRepository::class)->findAll();
+        $syncRecords = $this->getDoctrine()->getManager()->getRepository(SyncRecord::class)->findAll();
         $syncResults = [];
 
         foreach ($syncRecords as $syncRecord) {

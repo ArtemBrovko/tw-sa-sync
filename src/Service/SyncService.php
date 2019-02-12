@@ -86,7 +86,7 @@ class SyncService
             $saAccountName = 'Transferwise (holding)';
             $targetAccount = $this->getSAAccountByName($smartAccountsClient, $saAccountName);
 
-            $transferList = $transferWiseClient->getTransfersList($startDate->format($dateFormat), $endDate->format($dateFormat), TransferWiseService::TRANSFER_STATUS_OUTGOING_PAYMENT_SENT);
+            $transferList = $transferWiseClient->getTransfersList($startDate->format($dateFormat), $endDate->format($dateFormat), TransferWiseApiService::TRANSFER_STATUS_OUTGOING_PAYMENT_SENT);
 
             foreach ($transferList as $item) {
                 if (in_array($item->id, $synced)) {

@@ -160,7 +160,7 @@ class Client
         $testMode = true;
 
         if ($testMode) {
-            return 'https://sa.SmartAccountsApi.eu/api/';
+            return 'https://sa.smartaccounts.eu/api/';
         } else {
             throw new \Exception('Production mode is not implemented yet');
         }
