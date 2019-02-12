@@ -6,9 +6,9 @@
 
 namespace App\Controller;
 
-use App\Service\SmartAccountsService;
 use App\Service\SyncService;
-use App\Service\TransferWiseService;
+use ArtemBro\SmartAccountsApiBundle\Service\SmartAccountsApiService;
+use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,14 +17,14 @@ use Symfony\Component\Routing\Annotation\Route;
 class DefaultController extends AbstractController
 {
     /**
-     * @var TransferWiseService
+     * @var TransferWiseApiService
      */
     private $transferWiseService;
 
     /**
-     * @var SmartAccountsService
+     * @var SmartAccountsApiService
      */
-    private $smartAccountsService;
+    private $smartAccountsApiService;
 
     /**
      * @var SyncService
@@ -34,16 +34,16 @@ class DefaultController extends AbstractController
     /**
      * DefaultController constructor.
      *
-     * @param TransferWiseService $transferWiseService
-     * @param SmartAccountsService $smartAccountsService
+     * @param TransferWiseApiService $transferWiseService
+     * @param SmartAccountsApiService $smartAccountsApiService
      * @param SyncService $syncService
      */
-    public function __construct(TransferWiseService $transferWiseService,
-                                SmartAccountsService $smartAccountsService,
+    public function __construct(TransferWiseApiService $transferWiseService,
+                                SmartAccountsApiService $smartAccountsApiService,
                                 SyncService $syncService)
     {
         $this->transferWiseService = $transferWiseService;
-        $this->smartAccountsService = $smartAccountsService;
+        $this->smartAccountsApiService = $smartAccountsApiService;
         $this->syncService = $syncService;
     }
 
@@ -57,7 +57,12 @@ class DefaultController extends AbstractController
      */
     public function syncAction()
     {
-        return $this->render('sync.html.twig', $this->syncService->sync());
+        $syncResult = $this->syncService->sync();
+        return $this->render('sync.html.twig', array(
+            'imported' => $syncResult->getImported(),
+            'skipped' => $syncResult->getSkipped(),
+            'errors' => $syncResult->getErrors()
+        ));
     }
 
     /**
@@ -76,13 +81,13 @@ class DefaultController extends AbstractController
         $skipped = 0;
         $updated = 0;
         switch ($transfer->status) {
-            case TransferWiseService::TRANSFER_STATUS_INCOMING_PAYMENT_WAITING:
+            case TransferWiseApiService::TRANSFER_STATUS_INCOMING_PAYMENT_WAITING:
                 $transferWiseService->transferProcess($transferId);
 
-            case TransferWiseService::TRANSFER_STATUS_PROCESSING:
+            case TransferWiseApiService::TRANSFER_STATUS_PROCESSING:
                 $transferWiseService->transferConvertFunds($transferId);
 
-            case TransferWiseService::TRANSFER_STATUS_FUNDS_CONVERTED:
+            case TransferWiseApiService::TRANSFER_STATUS_FUNDS_CONVERTED:
                 $transfer = $transferWiseService->transferSendOutgoingPayment($transferId);
                 ++$updated;
                 break;
@@ -118,13 +123,13 @@ class DefaultController extends AbstractController
             $transferId = $transfer->id;
 
             switch ($transfer->status) {
-                case TransferWiseService::TRANSFER_STATUS_INCOMING_PAYMENT_WAITING:
+                case TransferWiseApiService::TRANSFER_STATUS_INCOMING_PAYMENT_WAITING:
                     $transferWiseService->transferProcess($transferId);
 
-                case TransferWiseService::TRANSFER_STATUS_PROCESSING:
+                case TransferWiseApiService::TRANSFER_STATUS_PROCESSING:
                     $transferWiseService->transferConvertFunds($transferId);
 
-                case TransferWiseService::TRANSFER_STATUS_FUNDS_CONVERTED:
+                case TransferWiseApiService::TRANSFER_STATUS_FUNDS_CONVERTED:
                     $simulatedTransfers[] = $transferWiseService->transferSendOutgoingPayment($transferId);
                     ++$updated;
                     break;

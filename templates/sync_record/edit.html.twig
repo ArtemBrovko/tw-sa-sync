@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit SyncRecord{% endblock %}
+
+{% block body %}
+    <h1>Edit SyncRecord</h1>
+
+    {{ include('sync_record/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('sync_record_index') }}">back to list</a>
+
+    {{ include('sync_record/_delete_form.html.twig') }}
+{% endblock %}

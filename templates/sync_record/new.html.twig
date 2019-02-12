@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New SyncRecord{% endblock %}
+
+{% block body %}
+    <h1>Create new SyncRecord</h1>
+
+    {{ include('sync_record/_form.html.twig') }}
+
+    <a href="{{ path('sync_record_index') }}">back to list</a>
+{% endblock %}

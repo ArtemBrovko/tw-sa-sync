@@ -6,36 +6,62 @@
 
 namespace App\Service;
 
-use App\Model\SmartAccounts\Client;
-use App\Model\SmartAccounts\Enum\AccountType;
-use App\Model\SmartAccounts\Payment;
+
+use App\Entity\Job;
+use App\Entity\SyncRecord;
+use App\Sync\SyncResult;
+use ArtemBro\SmartAccountsApiBundle\Model\Client;
+use ArtemBro\SmartAccountsApiBundle\Model\Enum\AccountType;
+use ArtemBro\SmartAccountsApiBundle\Model\Payment;
+use ArtemBro\SmartAccountsApiBundle\Service\SmartAccountsApiService;
+use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 
 class SyncService
 {
     /**
-     * @var TransferWiseService
+     * @var TransferWiseApiService
      */
     private $transferWiseService;
 
     /**
-     * @var SmartAccountsService
+     * @var SmartAccountsApiService
      */
-    private $smartAccountsService;
+    private $smartAccountsApiService;
 
-    public function __construct(TransferWiseService $transferWiseService, SmartAccountsService $smartAccountsService)
+    /**
+     * @var SmartAccountsApiService
+     */
+    private $em;
+
+    /**
+     * SyncService constructor.
+     *
+     * @param TransferWiseApiService $transferWiseService
+     * @param SmartAccountsApiService $smartAccountsApiService
+     * @param EntityManagerInterface $em
+     */
+    public function __construct(TransferWiseApiService $transferWiseService,
+                                SmartAccountsApiService $smartAccountsApiService,
+                                EntityManagerInterface $em)
     {
         $this->transferWiseService = $transferWiseService;
-        $this->smartAccountsService = $smartAccountsService;
+        $this->smartAccountsApiService = $smartAccountsApiService;
+        $this->em = $em;
     }
 
     /**
-     * @return array
+     * @param SyncRecord $syncRecord
+     *
+     * @return SyncResult
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function sync()
+    public function sync(SyncRecord $syncRecord)
     {
-        $saAccountName = 'Transferwise (holding)';
-        $targetAccount = $this->getSAAccountByName($saAccountName);
+        $job = $this->startJob();
 
         $cacheFile = __DIR__ . '/synced.txt';
 
@@ -45,9 +71,7 @@ class SyncService
             $synced = [];
         }
 
-        $imported = array();
-        $skipped = array();
-        $errors = array();
+        $result = new SyncResult();
 
         $endDate = new \DateTime();
         $startDate = clone $endDate;
@@ -55,89 +79,159 @@ class SyncService
 
         $dateFormat = 'Y-m-d';
 
-        $transferList = $this->transferWiseService->getTransfersList($startDate->format($dateFormat), $endDate->format($dateFormat), TransferWiseService::TRANSFER_STATUS_OUTGOING_PAYMENT_SENT);
+        $transferWiseClient = $this->transferWiseService->getClient($syncRecord->getTransferWiseApiToken());
+        $smartAccountsClient = $this->smartAccountsApiService->getClient($syncRecord->getSmartAccountsApiKeyPublic(), $syncRecord->getSmartAccountsApiKeyPrivate());
 
-        foreach ($transferList as $item) {
-            if (in_array($item->id, $synced)) {
-                $skipped[$item->id] = $item;
-                continue;
-            }
+        try {
+            $saAccountName = 'Transferwise (holding)';
+            $targetAccount = $this->getSAAccountByName($smartAccountsClient, $saAccountName);
 
-//            print_r($item);
+            $transferList = $transferWiseClient->getTransfersList($startDate->format($dateFormat), $endDate->format($dateFormat), TransferWiseService::TRANSFER_STATUS_OUTGOING_PAYMENT_SENT);
 
-            $account = $this->transferWiseService->getAccount($item->targetAccount);
-            $accountName = $account->accountHolderName;
+            foreach ($transferList as $item) {
+                if (in_array($item->id, $synced)) {
+                    $result->addSkipped($item->id, $item);
+                    continue;
+                }
 
-            $page = 1;
-            $clientId = null;
-            do {
-                $saCandidateClients = json_decode($this->smartAccountsService->getClients($page++));
-                if (property_exists($saCandidateClients, 'clients')) {
-                    foreach ($saCandidateClients->clients as $client) {
-                        if (property_exists($client, 'name') && $client->name === $accountName) {
-                            $clientId = $client->id;
+                $account = $transferWiseClient->getAccount($item->targetAccount);
+                $accountName = $account->accountHolderName;
+
+                $page = 1;
+                $clientId = null;
+                do {
+                    $saCandidateClients = json_decode($smartAccountsClient->getClients($page++));
+                    if (property_exists($saCandidateClients, 'clients')) {
+                        foreach ($saCandidateClients->clients as $client) {
+                            if (property_exists($client, 'name') && $client->name === $accountName) {
+                                $clientId = $client->id;
+                            }
+                        }
+                    }
+                } while ($saCandidateClients->hasMoreEntries);
+
+                if (!isset($clientId)) {
+                    $saClient = new Client();
+                    $saClient->setName($accountName);
+                    $saClient->setVatPc(0);
+
+                    $response = json_decode($smartAccountsClient->sendClient($saClient));
+
+                    $clientId = $response->clientId;
+                }
+
+                $payment = new Payment();
+                $payment->setDate((new \DateTime($item->created))->format('d.m.Y'));
+                $payment->setClientId($clientId);
+                $payment->setAccountType(AccountType::BANK);
+                $payment->setAccountName($saAccountName);
+                $payment->setAmount($item->sourceValue);
+                $payment->setCurrency($item->sourceCurrency);
+                $payment->setExchangeRate(1);
+                $payment->setComment($item->id);
+                $payment->setExtras([array(
+                    'price'       => $item->sourceValue,
+                    'quantity'    => 1,
+                    'description' => 'Main purchase',
+                    'account'     => $targetAccount->account,
+                )]);
+
+                $response = $smartAccountsClient->sendPurchase($payment);
+
+                if ($response->getStatusCode() === 200) {
+                    $synced[] = $item->id;
+                    file_put_contents($cacheFile, implode(';', $synced));
+                    $result->addImported($item->id, $item);
+                } else {
+                    $error = json_decode($response->getBody()->getContents());
+                    if ($error && $error->errors) {
+                        foreach ($error->errors as $currentError) {
+                            $result->addError($item->id, $currentError->message);
+                            print_r($payment);
                         }
                     }
                 }
-            } while ($saCandidateClients->hasMoreEntries);
-
-            if (!isset($clientId)) {
-                $saClient = new Client();
-                $saClient->setName($accountName);
-                $saClient->setVatPc(0);
-
-                $response = json_decode($this->smartAccountsService->sendClient($saClient));
-
-                $clientId = $response->clientId;
             }
+        } catch (\Exception $e) {
+            $job->addToLog(print_r($e, true));
+            $this->finishJob($job);
 
-            $payment = new Payment();
-            $payment->setDate((new \DateTime($item->created))->format('d.m.Y'));
-            $payment->setClientId($clientId);
-            $payment->setAccountType(AccountType::BANK);
-            $payment->setAccountName($saAccountName);
-            $payment->setAmount($item->sourceValue);
-            $payment->setCurrency($item->sourceCurrency);
-            $payment->setExchangeRate(1);
-            $payment->setComment($item->id);
-            $payment->setExtras([array(
-                'price'       => $item->sourceValue,
-                'quantity'    => 1,
-                'description' => 'Main purchase',
-                'account'     => $targetAccount->account,
-            )]);
-
-            $response = $this->smartAccountsService->sendPurchase($payment);
-
-            if ($response->getStatusCode() === 200) {
-                $synced[] = $item->id;
-                file_put_contents($cacheFile, implode(';', $synced));
-                $imported[$item->id] = $item;
-            } else {
-                $error = json_decode($response->getBody()->getContents());
-                if ($error && $error->errors) {
-                    $errors[$item->id] = [];
-                    foreach ($error->errors as $currentError) {
-                        $errors[$item->id][] = $currentError->message;
-                        print_r($payment);
-                    }
-                }
-            }
+            throw $e;
         }
 
-        return array(
-            'imported' => $imported,
-            'errors'   => $errors,
-            'skipped'  => $skipped
-        );
+        return $result;
     }
 
-    private function getSAAccountByIBAN($iban)
+    /**
+     * @return Job
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    private function startJob()
+    {
+        $job = new Job();
+        $job->setStarted(new \DateTime());
+
+        $this->em->persist($job);
+        $this->em->flush();
+
+        return $job;
+    }
+
+    /**
+     * @param \ArtemBro\SmartAccountsApiBundle\Client\Client $smartAccountsClient
+     * @param $name
+     *
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    private function getSAAccountByName(\ArtemBro\SmartAccountsApiBundle\Client\Client $smartAccountsClient, $name)
     {
         static $accounts = null;
 
         if (!isset($accounts)) {
-            $accounts = json_decode($this->smartAccountsService->getBankAccounts());
+            $accounts = json_decode($smartAccountsClient->getBankAccounts());
+        }
+
+        foreach ($accounts->bankAccounts as $account) {
+            if (property_exists($account, 'name') && $account->name === $name) {
+                return $account;
+            }
+        }
+
+        throw new \Exception('No account with name "' . $name . '"');
+    }
+
+    /**
+     * @param Job $job
+     *
+     * @return Job
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    private function finishJob(Job $job)
+    {
+        $job->setFinished(new \DateTime());
+
+        $this->em->persist($job);
+        $this->em->flush();
+
+        return $job;
+    }
+
+    /**
+     * @param \ArtemBro\SmartAccountsApiBundle\Client\Client $smartAccountsClient
+     * @param $iban
+     *
+     * @return |null
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    private function getSAAccountByIBAN(\ArtemBro\SmartAccountsApiBundle\Client\Client $smartAccountsClient, $iban)
+    {
+        static $accounts = null;
+
+        if (!isset($accounts)) {
+            $accounts = json_decode($smartAccountsClient->getBankAccounts());
         }
 
         foreach ($accounts as $account) {
@@ -149,26 +243,13 @@ class SyncService
         return null;
     }
 
-    /**
-     * @param $name
-     *
-     * @return mixed
-     * @throws \Exception
-     */
-    private function getSAAccountByName($name)
+    private function isSynced($id)
     {
-        static $accounts = null;
 
-        if (!isset($accounts)) {
-            $accounts = json_decode($this->smartAccountsService->getBankAccounts());
-        }
+    }
 
-        foreach ($accounts->bankAccounts as $account) {
-            if (property_exists($account, 'name') && $account->name === $name) {
-                return $account;
-            }
-        }
+    private function setIsSynced($job, $recordId)
+    {
 
-        throw new \Exception('No account with name "' . $name . '"');
     }
 }

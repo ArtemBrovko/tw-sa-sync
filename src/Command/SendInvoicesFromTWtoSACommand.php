@@ -7,7 +7,10 @@
 namespace App\Command;
 
 
+use App\Entity\SyncRecord;
 use App\Service\SyncService;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -19,9 +22,15 @@ class SendInvoicesFromTWtoSACommand extends Command
      */
     private $syncService;
 
-    public function __construct(SyncService $syncService)
+    /**
+     * @var EntityManagerInterface
+     */
+    private $entityManager;
+
+    public function __construct(SyncService $syncService, EntityManagerInterface $entityManager)
     {
         $this->syncService = $syncService;
+        $this->entityManager = $entityManager;
 
         parent::__construct();
     }
@@ -35,6 +44,10 @@ class SendInvoicesFromTWtoSACommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln(print_r($this->syncService->sync(), true));
+        $syncRecords = $this->entityManager->getRepository(SyncRecord::class)->findAll();
+
+        foreach ($syncRecords as $syncRecord) {
+            $output->writeln(print_r($this->syncService->sync($syncRecord), true));
+        }
     }
 }
