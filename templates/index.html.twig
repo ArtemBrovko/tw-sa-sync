@@ -1,6 +1,8 @@
-{% extends 'base.html.twig' %}
+{% extends 'base-with-menu.html.twig' %}
 
 {% block body %}
+    {{ parent() }}
+
     <form action="{{ path('app_default_simulate') }}">
         <h3>Enter transfer ID and click Submit button to simulate sending</h3>
         <input name="transferId" type="text">

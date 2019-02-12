@@ -1,6 +1,8 @@
-{% extends 'base.html.twig' %}
+{% extends 'base-with-menu.html.twig' %}
 
 {% block body %}
+    {{ parent() }}
+
     <p>Successful imports: <b>{{ imported | length }}</b></p>
     <p>Skipped records: <b>{{ skipped | length }}</b></p>
     <p>Errors: <b>{{ errors | length }}</b></p>

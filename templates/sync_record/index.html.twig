@@ -1,8 +1,10 @@
-{% extends 'base.html.twig' %}
+{% extends 'base-with-menu.html.twig' %}
 
 {% block title %}Synchronization records{% endblock %}
 
 {% block body %}
+    {{ parent() }}
+
     <div class="container">
         <h1 class="align-middle">Synchronization records
             <a class="btn btn-outline-success" href="{{ path('sync_record_new') }}">Create new</a>

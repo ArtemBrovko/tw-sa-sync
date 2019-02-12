@@ -1,6 +1,8 @@
-{% extends 'base.html.twig' %}
+{% extends 'base-with-menu.html.twig' %}
 
 {% block body %}
+    {{ parent() }}
+
     <ul>
         {% for transfer in transfers %}
             <li>Transfer <b>#{{ transfer.id }}</b> for <b>{{ transfer.sourceValue }} {{ transfer.sourceCurrency }}</b>
