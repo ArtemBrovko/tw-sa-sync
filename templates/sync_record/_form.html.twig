@@ -1,4 +1,5 @@
+{% form_theme form 'form-template.twig' %}
 {{ form_start(form) }}
     {{ form_widget(form) }}
-    <button class="btn btn-outline-primary">{{ button_label|default('Save') }}</button>
+    <button class="btn btn-outline-primary float-right">{{ button_label|default('Save') }}</button>
 {{ form_end(form) }}
