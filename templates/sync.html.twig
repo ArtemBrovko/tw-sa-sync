@@ -1,7 +1,6 @@
 {% extends 'base-with-menu.html.twig' %}
 
-{% block body %}
-    {{ parent() }}
+{% block content %}
 
     <p>Successful imports: <b>{{ imported | length }}</b></p>
     <p>Skipped records: <b>{{ skipped | length }}</b></p>

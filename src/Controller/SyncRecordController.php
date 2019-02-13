@@ -6,6 +6,7 @@ use App\Entity\SyncRecord;
 use App\Form\SyncRecordType;
 use App\Repository\SyncRecordRepository;
 use App\Service\SyncService;
+use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,13 +24,19 @@ class SyncRecordController extends AbstractController
     private $syncService;
 
     /**
+     * @var TransferWiseApiService
+     */
+    private $transferWiseApiService;
+
+    /**
      * SyncRecordController constructor.
      *
      * @param SyncService $syncService
      */
-    public function __construct(SyncService $syncService)
+    public function __construct(SyncService $syncService, TransferWiseApiService $transferWiseApiService)
     {
         $this->syncService = $syncService;
+        $this->transferWiseApiService = $transferWiseApiService;
     }
 
     /**
@@ -146,6 +153,46 @@ class SyncRecordController extends AbstractController
         }
 
         return new Response(print_r($syncResults, true));
+    }
+
+    /**
+     * @Route("/{id}/simulate}", name="sync_simulate_transfer", methods={"POST"}, requirements={"id"="\d+"})
+     * @param Request $request
+     * @param SyncRecord $syncRecord
+     *
+     * @return Response
+     */
+    public function simulate(Request $request, SyncRecord $syncRecord)
+    {
+        $transferWiseClient = $this->transferWiseApiService->getClient($syncRecord->getTransferWiseApiToken());
+
+        $transferId = $request->request->get('transferId');
+        $transfer = $transferWiseClient->getTransfer($transferId);
+
+        $skipped = 0;
+        $updated = 0;
+        switch ($transfer->status) {
+            case TransferWiseApiService::TRANSFER_STATUS_INCOMING_PAYMENT_WAITING:
+                $transferWiseClient->transferProcess($transferId);
+
+            case TransferWiseApiService::TRANSFER_STATUS_PROCESSING:
+                $transferWiseClient->transferConvertFunds($transferId);
+
+            case TransferWiseApiService::TRANSFER_STATUS_FUNDS_CONVERTED:
+                $transfer = $transferWiseClient->transferSendOutgoingPayment($transferId);
+                ++$updated;
+                break;
+
+            default:
+                ++$skipped;
+        }
+
+        return $this->render('sync_record/transfers.html.twig', array(
+            'sync_record'  => $syncRecord,
+            'transfers'    => [$transfer],
+            'skippedCount' => $skipped,
+            'updatedCount' => $updated,
+        ));
     }
 
     /**

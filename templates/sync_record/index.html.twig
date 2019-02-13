@@ -2,49 +2,45 @@
 
 {% block title %}Synchronization records{% endblock %}
 
-{% block body %}
-    {{ parent() }}
-
-    <div class="container">
-        <h1 class="align-middle">Synchronization records
-            <a class="btn btn-outline-success" href="{{ path('sync_record_new') }}">Create new</a>
-            <a class="btn btn-outline-success" href="{{ path('sync_run_all') }}"><i class="far fa-play-circle"></i> Run all</a>
-        </h1>
-        <table class="table table-bordered">
-            <thead class="thead-light">
+{% block content %}
+    <h1 class="align-middle">Synchronization records
+        <a class="btn btn-outline-success" href="{{ path('sync_record_new') }}">Create new</a>
+        <a class="btn btn-outline-success" href="{{ path('sync_run_all') }}"><i class="far fa-play-circle"></i> Run all</a>
+    </h1>
+    <table class="table table-bordered">
+        <thead class="thead-light">
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col">Active</th>
+            <th scope="col">Created</th>
+            <th scope="col">Updated</th>
+            <th scope="col">actions</th>
+        </tr>
+        </thead>
+        <tbody class="table-striped">
+        {% for sync_record in sync_records %}
             <tr>
-                <th scope="col">Id</th>
-                <th scope="col">Name</th>
-                <th scope="col">Active</th>
-                <th scope="col">Created</th>
-                <th scope="col">Updated</th>
-                <th scope="col">actions</th>
+                <th scope="row">{{ sync_record.id }}</th>
+                <td>{{ sync_record.name }}</td>
+                <td>{{ sync_record.active ? 'Yes' : 'No' }}</td>
+                <td>{{ sync_record.created ? sync_record.created|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ sync_record.updated ? sync_record.updated|date('Y-m-d H:i:s') : '' }}</td>
+                <td>
+                    <a class="btn btn-sm btn-outline-success"
+                       href="{{ path('sync_record_run', {'id': sync_record.id}) }}">
+                        <i class="far fa-play-circle"></i> sync</a>
+                    <a class="btn btn-sm btn-outline-primary"
+                       href="{{ path('sync_record_show', {'id': sync_record.id}) }}">show</a>
+                    <a class="btn btn-sm btn-outline-warning"
+                       href="{{ path('sync_record_edit', {'id': sync_record.id}) }}">edit</a>
+                </td>
             </tr>
-            </thead>
-            <tbody class="table-striped">
-            {% for sync_record in sync_records %}
-                <tr>
-                    <th scope="row">{{ sync_record.id }}</th>
-                    <td>{{ sync_record.name }}</td>
-                    <td>{{ sync_record.active ? 'Yes' : 'No' }}</td>
-                    <td>{{ sync_record.created ? sync_record.created|date('Y-m-d H:i:s') : '' }}</td>
-                    <td>{{ sync_record.updated ? sync_record.updated|date('Y-m-d H:i:s') : '' }}</td>
-                    <td>
-                        <a class="btn btn-sm btn-outline-success"
-                           href="{{ path('sync_record_run', {'id': sync_record.id}) }}">
-                            <i class="far fa-play-circle"></i> sync</a>
-                        <a class="btn btn-sm btn-outline-primary"
-                           href="{{ path('sync_record_show', {'id': sync_record.id}) }}">show</a>
-                        <a class="btn btn-sm btn-outline-warning"
-                           href="{{ path('sync_record_edit', {'id': sync_record.id}) }}">edit</a>
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="9">no records found</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
+        {% else %}
+            <tr>
+                <td colspan="9">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}

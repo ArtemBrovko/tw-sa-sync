@@ -1,8 +1,6 @@
 {% extends 'base-with-menu.html.twig' %}
 
-{% block body %}
-    {{ parent() }}
-
+{% block content %}
     <ul>
         {% for transfer in transfers %}
             <li>Transfer <b>#{{ transfer.id }}</b> for <b>{{ transfer.sourceValue }} {{ transfer.sourceCurrency }}</b>
@@ -12,4 +10,6 @@
     </ul>
     <p>Transfers updated: <b>{{ updatedCount }}</b></p>
     <p>Transfers skipped: <b>{{ skippedCount }}</b></p>
+
+    <a class="btn btn-primary" href="{{ path('sync_record_show', {'id': sync_record.id}) }}">Back</a>
 {% endblock %}

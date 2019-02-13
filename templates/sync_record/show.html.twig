@@ -2,49 +2,60 @@
 
 {% block title %}SyncRecord{% endblock %}
 
-{% block body %}
-    <h1>SyncRecord</h1>
+{% block content %}
+    <h1>SyncRecord
+        <a href="{{ path('sync_record_edit', {'id': sync_record.id}) }}" class="btn btn-outline-warning">edit</a>
+        <a href="{{ path('sync_record_index') }}" class="btn btn-outline-secondary">back to list</a>
+    </h1>
 
     <table class="table">
         <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ sync_record.id }}</td>
-            </tr>
-            <tr>
-                <th>SmartAccountsApiKeyPublic</th>
-                <td>{{ sync_record.smartAccountsApiKeyPublic }}</td>
-            </tr>
-            <tr>
-                <th>SmartAccountsApiKeyPrivate</th>
-                <td>{{ sync_record.smartAccountsApiKeyPrivate }}</td>
-            </tr>
-            <tr>
-                <th>TransferWiseApiToken</th>
-                <td>{{ sync_record.transferWiseApiToken }}</td>
-            </tr>
-            <tr>
-                <th>Name</th>
-                <td>{{ sync_record.name }}</td>
-            </tr>
-            <tr>
-                <th>Active</th>
-                <td>{{ sync_record.active ? 'Yes' : 'No' }}</td>
-            </tr>
-            <tr>
-                <th>Created</th>
-                <td>{{ sync_record.created ? sync_record.created|date('Y-m-d H:i:s') : '' }}</td>
-            </tr>
-            <tr>
-                <th>Updated</th>
-                <td>{{ sync_record.updated ? sync_record.updated|date('Y-m-d H:i:s') : '' }}</td>
-            </tr>
+        <tr>
+            <th>Id</th>
+            <td>{{ sync_record.id }}</td>
+        </tr>
+        <tr>
+            <th>SmartAccountsApiKeyPublic</th>
+            <td>{{ sync_record.smartAccountsApiKeyPublic }}</td>
+        </tr>
+        <tr>
+            <th>SmartAccountsApiKeyPrivate</th>
+            <td>{{ sync_record.smartAccountsApiKeyPrivate }}</td>
+        </tr>
+        <tr>
+            <th>TransferWiseApiToken</th>
+            <td>{{ sync_record.transferWiseApiToken }}</td>
+        </tr>
+        <tr>
+            <th>Name</th>
+            <td>{{ sync_record.name }}</td>
+        </tr>
+        <tr>
+            <th>Active</th>
+            <td>{{ sync_record.active ? 'Yes' : 'No' }}</td>
+        </tr>
+        <tr>
+            <th>Created</th>
+            <td>{{ sync_record.created ? sync_record.created|date('Y-m-d H:i:s') : '' }}</td>
+        </tr>
+        <tr>
+            <th>Updated</th>
+            <td>{{ sync_record.updated ? sync_record.updated|date('Y-m-d H:i:s') : '' }}</td>
+        </tr>
+        <tr>
+            <th></th>
+            <td>
+                <form method="post" action="{{ path('sync_simulate_transfer', {'id': sync_record.id}) }}">
+                    <p>Enter transfer ID and click Submit button to simulate sending</p>
+                    <input name="transferId" type="text">
+
+                    <button type="submit" class="btn btn-outline-primary">Submit</button>
+                </form>
+                <p>Or press <a href="" class="btn btn-outline-primary">Simulate all</a> </p>
+            </td>
+        </tr>
         </tbody>
     </table>
-
-    <a href="{{ path('sync_record_index') }}">back to list</a>
-
-    <a href="{{ path('sync_record_edit', {'id': sync_record.id}) }}">edit</a>
 
     {{ include('sync_record/_delete_form.html.twig') }}
 {% endblock %}
