@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Ambta\DoctrineEncryptBundle\Configuration\Encrypted;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -20,12 +21,14 @@ class SyncRecord
 
     /**
      * @Assert\NotBlank
+     * @Encrypted()
      * @ORM\Column(type="string", length=255)
      */
     private $smartAccountsApiKeyPublic;
 
     /**
      * @Assert\NotBlank
+     * @Encrypted()
      * @ORM\Column(type="string", length=255)
      */
     private $smartAccountsApiKeyPrivate;
@@ -38,6 +41,7 @@ class SyncRecord
 
     /**
      * @Assert\NotBlank
+     * @Encrypted()
      * @ORM\Column(type="string", length=255)
      */
     private $name;

@@ -7,6 +7,8 @@
         "ext-iconv": "*",
         "ext-json": "*",
         "guzzlehttp/guzzle": "^6.3",
+        "michaeldegroot/doctrine-encrypt-bundle": "3.0.*",
+        "paragonie/halite": "^4",
         "sensio/framework-extra-bundle": "^5.1",
         "symfony/apache-pack": "^1.0",
         "symfony/asset": "4.2.*",
