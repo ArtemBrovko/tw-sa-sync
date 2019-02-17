@@ -35,13 +35,13 @@ class SyncRecord
 
     /**
      * @Assert\NotBlank
+     * @Encrypted()
      * @ORM\Column(type="string", length=255)
      */
     private $transferWiseApiToken;
 
     /**
      * @Assert\NotBlank
-     * @Encrypted()
      * @ORM\Column(type="string", length=255)
      */
     private $name;

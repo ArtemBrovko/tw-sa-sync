@@ -17,5 +17,5 @@
 /.web-server-pid
 ###< symfony/web-server-bundle ###
 /.idea
-.HaliteEncryptor.key
+.Halite.key
 composer.phar

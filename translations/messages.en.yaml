@@ -1,0 +1,11 @@
+action.new: 'Add %entity_name%'
+action.show: Show
+action.edit: Edit
+action.search: Search
+action.delete: Delete
+action.save: 'Save changes'
+action.cancel: Cancel
+action.list: 'Back to listing'
+action.deselect: Deselect
+label.form.empty_value: None
+__name__label__: __name__label__
