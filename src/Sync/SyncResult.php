@@ -1,7 +1,7 @@
 <?php
 /**
- * @author Artem Brovko <artem.brovko@modera.net>
- * @copyright 2019 Modera Foundation
+ * @author Artem Brovko <brovko.artem@gmail.com>
+ * @copyright 2019 Artem Brovko
  */
 
 namespace App\Sync;
