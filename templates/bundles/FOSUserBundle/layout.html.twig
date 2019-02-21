@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noodp, noimageindex, notranslate, nocache"/>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <meta name="generator" content="EasyAdmin"/>
+
+    <title>{% block page_title %}{% endblock %}</title>
+
+    {% block head_stylesheets %}
+        <link rel="stylesheet" href="{{ asset('bundles/easyadmin/app.css') }}">
+
+        <style>
+            :root {
+                --color-primary: {{ easyadmin_config('design.brand_color') }};
+            }
+        </style>
+    {% endblock %}
+
+    {% for css_asset in easyadmin_config('design.assets.css') %}
+        <link rel="stylesheet" href="{{ asset(css_asset) }}">
+    {% endfor %}
+
+    {% block head_favicon %}
+        {% set favicon = easyadmin_config('design.assets.favicon') %}
+        <link rel="icon" type="{{ favicon.mime_type }}" href="{{ asset(favicon.path) }}"/>
+    {% endblock %}
+
+    {% block head_javascript %}
+        <script src="{{ asset('bundles/easyadmin/app.js') }}"></script>
+    {% endblock head_javascript %}
+
+    {% if easyadmin_config('design.rtl') %}
+        <link rel="stylesheet" href="{{ asset('bundles/easyadmin/app-rtl.css') }}">
+    {% endif %}
+</head>
+<body
+    {% if block('body_class') is defined %}class="{{ block('body_class') }}"{% endif %}
+>
+<div>
+    {% if is_granted("IS_AUTHENTICATED_REMEMBERED") %}
+        {{ 'layout.logged_in_as'|trans({'%username%': app.user.username}, 'FOSUserBundle') }} |
+        <a href="{{ path('fos_user_security_logout') }}">
+            {{ 'layout.logout'|trans({}, 'FOSUserBundle') }}
+        </a>
+    {% else %}
+        <a href="{{ path('fos_user_security_login') }}">{{ 'layout.login'|trans({}, 'FOSUserBundle') }}</a>
+    {% endif %}
+</div>
+
+{% if app.request.hasPreviousSession %}
+    {% for type, messages in app.session.flashbag.all() %}
+        {% for message in messages %}
+            <div class="flash-{{ type }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+{% endif %}
+
+<div>
+    {% block fos_user_content %}
+    {% endblock fos_user_content %}
+</div>
+</body>
+</html>

@@ -1,0 +1,109 @@
+{% trans_default_domain 'FOSUserBundle' %}
+
+<!DOCTYPE html>
+<html lang="{{ app.request.locale|split('_')|first|default('en') }}">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noodp, noimageindex, notranslate, nocache"/>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <meta name="generator" content="EasyAdmin"/>
+
+    {% block head_stylesheets %}
+        <link rel="stylesheet" href="{{ asset('bundles/easyadmin/app.css') }}">
+
+        <style>
+            :root {
+                --color-primary: {{ easyadmin_config('design.brand_color') }};
+            }
+        </style>
+    {% endblock %}
+
+    {% for css_asset in easyadmin_config('design.assets.css') %}
+        <link rel="stylesheet" href="{{ asset(css_asset) }}">
+    {% endfor %}
+
+    {% block head_favicon %}
+        {% set favicon = easyadmin_config('design.assets.favicon') %}
+        <link rel="icon" type="{{ favicon.mime_type }}" href="{{ asset(favicon.path) }}"/>
+    {% endblock %}
+
+    {% block head_javascript %}
+        <script src="{{ asset('bundles/easyadmin/app.js') }}"></script>
+    {% endblock head_javascript %}
+
+    {% if easyadmin_config('design.rtl') %}
+        <link rel="stylesheet" href="{{ asset('bundles/easyadmin/app-rtl.css') }}">
+    {% endif %}
+</head>
+
+{% block body %}
+    <body class="easyadmin login-page {% block body_class %}{% endblock %}">
+
+    <div class="container">
+        <div class="row">
+            <div class="login-box col-6 align-self-center">
+                <div class="login-logo">
+                    <a href="../../index2.html"><img width="150" src="{{ asset('img/logo_1office_GB_H.svg') }}"/></a>
+                </div>
+                <!-- /.login-logo -->
+                <div class="login-box-body">
+                    <p class="login-box-msg">Sign in to start your session</p>
+
+                    <form action="{{ path("fos_user_security_check") }}" method="post">
+                        {% if csrf_token %}
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}"/>
+                        {% endif %}
+                        <div class="form-group has-feedback">
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="{{ 'security.login.username'|trans }}"
+                                   id="username" name="_username"
+                                   value="{{ last_username }}"
+                                   required="required"
+                                   autocomplete="username"/>
+                            <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+                        </div>
+                        <div class="form-group has-feedback">
+                            <input type="password"
+                                   id="password"
+                                   name="_password"
+                                   required="required"
+                                   placeholder="{{ 'security.login.password'|trans }}"
+                                   class="form-control"
+                                   autocomplete="current-password"/>
+                            <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-8">
+                                <div class="checkbox icheck">
+                                    <label>
+                                        <input type="checkbox" id="remember_me" name="_remember_me" value="on" /> {{ 'security.login.remember_me'|trans }}
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- /.col -->
+                            <div class="col-xs-4">
+                                <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In</button>
+                            </div>
+                            <!-- /.col -->
+                        </div>
+                    </form>
+                    <!-- /.social-auth-links -->
+
+                    <a href="{{ path('fos_user_resetting_request') }}">I forgot my password</a><br>
+                    <a href="{{ path('fos_user_registration_register') }}" class="text-center">Register a new membership</a>
+
+                </div>
+                <!-- /.login-box-body -->
+            </div>
+        </div>
+    </div>
+    <!-- /.login-box -->
+
+    {% for js_asset in easyadmin_config('design.assets.js') %}
+        <script src="{{ asset(js_asset) }}"></script>
+    {% endfor %}
+    </body>
+{% endblock body %}
+</html>

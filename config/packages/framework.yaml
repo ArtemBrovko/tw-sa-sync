@@ -19,3 +19,5 @@ framework:
         enabled: true
         enable_annotations: true
     ide: phpstorm
+    templating:
+        engines: ['twig']

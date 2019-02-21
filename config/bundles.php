@@ -12,6 +12,7 @@ return [
     ArtemBro\SmartAccountsApiBundle\ArtemBroSmartAccountsApiBundle::class => ['all' => true],
     ArtemBro\TransferWiseApiBundle\ArtemBroTransferWiseApiBundle::class => ['all' => true],
     Ambta\DoctrineEncryptBundle\AmbtaDoctrineEncryptBundle::class => ['all' => true],
+    FOS\UserBundle\FOSUserBundle::class => ['all' => true],
 
     Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true, 'test' => true],
     Symfony\Bundle\MonologBundle\MonologBundle::class => ['all' => true],

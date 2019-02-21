@@ -6,12 +6,32 @@ easy_admin:
     design:
         brand_color: '#98c93c'
         assets:
+            css:
+                - 'css/admin.css'
             favicon:
                 path: '/img/Favicon_-_1Office.png'
                 mime_type: 'image/png'
+        menu:
+            - { entity: 'SyncRecord', default: true }
+            - User
 #        templates:
 #            field_boolean: ''
     entities:
+        User:
+            class: App\Entity\User
+            label: Users
+            form:
+                fields:
+                    - username
+                    - usernameCanonical
+                    - email
+                    - emailCanonical
+                    - enabled
+#                    - groups
+                    - roles
+            list:
+                fields: ['id', 'username', 'email', 'enabled', 'lastLogin']
+
         SyncRecord:
             class: App\Entity\SyncRecord
             label: 'Synchronization records'
