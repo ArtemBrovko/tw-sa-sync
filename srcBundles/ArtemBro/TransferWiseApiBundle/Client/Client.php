@@ -7,6 +7,7 @@
 
 namespace ArtemBro\TransferWiseApiBundle\Client;
 
+use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
 use Psr\Http\Message\ResponseInterface;
 
 class Client
@@ -17,13 +18,19 @@ class Client
     private $apiToken;
 
     /**
+     * @var string
+     */
+    private $env;
+
+    /**
      * Client constructor.
      *
      * @param string $apiToken
      */
-    public function __construct(string $apiToken)
+    public function __construct(string $apiToken, string $env = TransferWiseApiService::API_ENVIRONMENT_DEV)
     {
         $this->apiToken = $apiToken;
+        $this->env = $env;
     }
 
     /**
@@ -253,12 +260,10 @@ class Client
      */
     private function getEndpointUrl()
     {
-        $testMode = true;
-
-        if ($testMode) {
-            return 'https://api.sandbox.transferwise.tech/v1/';
+        if ($this->env === TransferWiseApiService::API_ENVIRONMENT_PROD) {
+            return 'https://api.transferwise.com/v1/';
         } else {
-            throw new \Exception('Production mode is not implemented yet');
+            return 'https://api.sandbox.transferwise.tech/v1/';
         }
     }
 

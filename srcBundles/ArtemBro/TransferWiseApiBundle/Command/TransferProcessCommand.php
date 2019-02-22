@@ -8,7 +8,9 @@
 namespace ArtemBro\TransferWiseApiBundle\Command;
 
 
+use App\Entity\SyncRecord;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,17 +23,24 @@ class TransferProcessCommand extends Command
      */
     private $transferWiseService;
 
+    /**
+     * @var EntityManagerInterface
+     */
+    private $entityManager;
+
     protected function configure()
     {
         $this
             ->setName('transfer-wise:simulation:process')
             ->setDescription('Simulate transfer processing')
+            ->addArgument('syncRecord', InputArgument::REQUIRED)
             ->addArgument('id', InputArgument::OPTIONAL, 'Transfer ID');
     }
 
-    public function __construct(TransferWiseApiService $transferWiseService)
+    public function __construct(TransferWiseApiService $transferWiseService, EntityManagerInterface $entityManager)
     {
         $this->transferWiseService = $transferWiseService;
+        $this->entityManager = $entityManager;
 
         parent::__construct();
     }
@@ -45,6 +54,10 @@ class TransferProcessCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        print_r($this->transferWiseService->transferProcess($input->getArgument('id')));
+        $syncRecord = $this->entityManager->getRepository(SyncRecord::class)->find($input->getArgument('syncRecord'));
+
+        $client = $this->transferWiseService->getClientForRecord($syncRecord);
+
+        print_r($client->transferProcess($input->getArgument('id')));
     }
 }

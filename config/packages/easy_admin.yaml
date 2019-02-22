@@ -13,6 +13,7 @@ easy_admin:
                 mime_type: 'image/png'
         menu:
             - { entity: 'SyncRecord', default: true }
+            - Job
             - User
 #        templates:
 #            field_boolean: ''
@@ -31,7 +32,10 @@ easy_admin:
                     - roles
             list:
                 fields: ['id', 'username', 'email', 'enabled', 'lastLogin']
-
+        Job:
+            class: App\Entity\Job
+            label: 'Logs'
+            disabled_actions: ['new', 'delete', ]
         SyncRecord:
             class: App\Entity\SyncRecord
             label: 'Synchronization records'
@@ -45,8 +49,11 @@ easy_admin:
                     - smartAccountsApiKeyPrivate
                     - { type: 'section', columns: 6, label: 'TransferWise API'}
                     - transferWiseApiToken
+                    - { property: 'transferWiseApiEnvironment', label: 'Production environment'}
             list:
-                fields: ['id', 'name', 'active', 'created', 'updated']
+                actions:
+                    - { type: 'route', name: 'sync_record_run', icon: 'play-circle' }
+                fields: ['id', 'name', 'active', { property: 'transferWiseApiEnvironment', label: 'Production environment'}, 'created', 'updated']
             search:
                 fields: ['id', 'name']
             new:

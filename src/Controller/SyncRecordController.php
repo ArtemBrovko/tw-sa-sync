@@ -164,7 +164,7 @@ class SyncRecordController extends AbstractController
      */
     public function simulate(Request $request, SyncRecord $syncRecord)
     {
-        $transferWiseClient = $this->transferWiseApiService->getClient($syncRecord->getTransferWiseApiToken());
+        $transferWiseClient = $this->transferWiseApiService->getClientForRecord($syncRecord);
 
         $transferId = $request->request->get('transferId');
         $transfer = $transferWiseClient->getTransfer($transferId);

@@ -79,7 +79,7 @@ class SyncService
 
         $dateFormat = 'Y-m-d';
 
-        $transferWiseClient = $this->transferWiseService->getClient($syncRecord->getTransferWiseApiToken());
+        $transferWiseClient = $this->transferWiseService->getClientForRecord($syncRecord);
         $smartAccountsClient = $this->smartAccountsApiService->getClient($syncRecord->getSmartAccountsApiKeyPublic(), $syncRecord->getSmartAccountsApiKeyPrivate());
 
         try {
@@ -147,16 +147,16 @@ class SyncService
                     if ($error && $error->errors) {
                         foreach ($error->errors as $currentError) {
                             $result->addError($item->id, $currentError->message);
-                            print_r($payment);
+//                            print_r($payment);
                         }
                     }
                 }
             }
         } catch (\Exception $e) {
             $job->addToLog(print_r($e, true));
-            $this->finishJob($job);
-
             throw $e;
+        } finally {
+            $this->finishJob($job);
         }
 
         return $result;

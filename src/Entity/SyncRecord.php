@@ -41,6 +41,11 @@ class SyncRecord
     private $transferWiseApiToken;
 
     /**
+     * @ORM\Column(type="boolean")
+     */
+    private $transferWiseApiEnvironment;
+
+    /**
      * @Assert\NotBlank
      * @ORM\Column(type="string", length=255)
      */
@@ -100,6 +105,22 @@ class SyncRecord
         $this->transferWiseApiToken = $transferWiseApiToken;
 
         return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTransferWiseApiEnvironment()
+    {
+        return $this->transferWiseApiEnvironment;
+    }
+
+    /**
+     * @param mixed $transferWiseApiEnvironment
+     */
+    public function setTransferWiseApiEnvironment($transferWiseApiEnvironment): void
+    {
+        $this->transferWiseApiEnvironment = $transferWiseApiEnvironment;
     }
 
     public function getName(): ?string

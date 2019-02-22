@@ -8,7 +8,9 @@
 namespace ArtemBro\TransferWiseApiBundle\Command;
 
 
+use App\Entity\SyncRecord;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,11 +23,17 @@ class TransferConvertFundsCommand extends Command
      */
     private $transferWiseService;
 
+    /**
+     * @var EntityManagerInterface
+     */
+    private $entityManager;
+
     protected function configure()
     {
         $this
             ->setName('transfer-wise:simulation:convert-funds')
             ->setDescription('Simulate funds convertion for transfer')
+            ->addArgument('syncRecord', InputArgument::REQUIRED)
             ->addArgument('id', InputArgument::OPTIONAL, 'Transfer ID');
     }
 
@@ -34,9 +42,10 @@ class TransferConvertFundsCommand extends Command
      *
      * @param TransferWiseApiService $transferWiseService
      */
-    public function __construct(TransferWiseApiService $transferWiseService)
+    public function __construct(TransferWiseApiService $transferWiseService, EntityManagerInterface $entityManager)
     {
         $this->transferWiseService = $transferWiseService;
+        $this->entityManager = $entityManager;
 
         parent::__construct();
     }
@@ -50,6 +59,10 @@ class TransferConvertFundsCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        print_r($this->transferWiseService->transferConvertFunds($input->getArgument('id')));
+        $syncRecord = $this->entityManager->getRepository(SyncRecord::class)->find($input->getArgument('syncRecord'));
+
+        $client = $this->transferWiseService->getClientForRecord($syncRecord);
+
+        print_r($client->transferConvertFunds($input->getArgument('id')));
     }
 }

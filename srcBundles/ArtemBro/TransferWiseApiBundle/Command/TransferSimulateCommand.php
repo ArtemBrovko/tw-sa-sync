@@ -8,7 +8,9 @@
 namespace ArtemBro\TransferWiseApiBundle\Command;
 
 
+use App\Entity\SyncRecord;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,11 +23,17 @@ class TransferSimulateCommand extends Command
      */
     private $transferWiseService;
 
+    /**
+     * @var EntityManagerInterface
+     */
+    private $entityManager;
+
     protected function configure()
     {
         $this
             ->setName('transfer-wise:simulation:simulate')
-            ->setDescription('Simulate funds convertion for transfer')
+            ->setDescription('Simulate funds conversion for transfer')
+            ->addArgument('syncRecord', InputArgument::REQUIRED)
             ->addArgument('id', InputArgument::OPTIONAL, 'Transfer ID');
     }
 
@@ -34,9 +42,10 @@ class TransferSimulateCommand extends Command
      *
      * @param TransferWiseApiService $transferWiseService
      */
-    public function __construct(TransferWiseApiService $transferWiseService)
+    public function __construct(TransferWiseApiService $transferWiseService, EntityManagerInterface $entityManager)
     {
         $this->transferWiseService = $transferWiseService;
+        $this->entityManager = $entityManager;
 
         parent::__construct();
     }
@@ -51,20 +60,23 @@ class TransferSimulateCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
 
-        $tws = $this->transferWiseService;
+        $syncRecord = $this->entityManager->getRepository(SyncRecord::class)->find($input->getArgument('syncRecord'));
+
+        $client = $this->transferWiseService->getClientForRecord($syncRecord);
+
         $transferId = $input->getArgument('id');
 
-        $transfer = $tws->getTransfer($transferId);
+        $transfer = $client->getTransfer($transferId);
 
         switch ($transfer->status) {
             case TransferWiseApiService::TRANSFER_STATUS_INCOMING_PAYMENT_WAITING:
-                print_r($this->transferWiseService->transferProcess($transferId));
+                print_r($client->transferProcess($transferId));
 
             case TransferWiseApiService::TRANSFER_STATUS_PROCESSING:
-                print_r($this->transferWiseService->transferConvertFunds($transferId));
+                print_r($client->transferConvertFunds($transferId));
 
             case TransferWiseApiService::TRANSFER_STATUS_FUNDS_CONVERTED:
-                print_r($this->transferWiseService->transferSendOutgoingPayment($transferId));
+                print_r($client->transferSendOutgoingPayment($transferId));
         }
     }
 }

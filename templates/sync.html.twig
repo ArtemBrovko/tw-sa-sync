@@ -1,6 +1,6 @@
-{% extends 'base-with-menu.html.twig' %}
+{% extends '@EasyAdmin/default/layout.html.twig' %}
 
-{% block content %}
+{% block main %}
 
     <p>Successful imports: <b>{{ imported | length }}</b></p>
     <p>Skipped records: <b>{{ skipped | length }}</b></p>

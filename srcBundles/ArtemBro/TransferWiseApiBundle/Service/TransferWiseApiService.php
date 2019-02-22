@@ -7,11 +7,15 @@
 namespace ArtemBro\TransferWiseApiBundle\Service;
 
 
+use App\Entity\SyncRecord;
 use ArtemBro\TransferWiseApiBundle\Client\Client;
 
 class TransferWiseApiService
 {
     const PERSONAL_ACCOUNT_TYPE_NAME = 'personal';
+
+    const API_ENVIRONMENT_DEV = 'dev';
+    const API_ENVIRONMENT_PROD = 'prod';
 
     const TRANSFER_STATUS_INCOMING_PAYMENT_WAITING = 'incoming_payment_waiting';
     const TRANSFER_STATUS_PROCESSING = 'processing';
@@ -20,14 +24,25 @@ class TransferWiseApiService
     const TRANSFER_STATUS_BOUNCED_BACK = 'bounced_back';
     const TRANSFER_STATUS_FUNDS_REFUNDED = 'funds_refunded';
 
-    public function getClient($apiKey)
+    /**
+     * @param $apiKey
+     * @param string $env
+     *
+     * @return Client
+     */
+    public function getClient($apiKey, $env = TransferWiseApiService::API_ENVIRONMENT_DEV)
     {
-        return new Client($apiKey);
+        return new Client($apiKey, $env);
     }
 
-    private function getAPIToken()
+    /**
+     * @param SyncRecord $syncRecord
+     *
+     * @return Client
+     */
+    public function getClientForRecord(SyncRecord $syncRecord)
     {
-        return '5a7904d4-c14d-4095-b1e4-12000e20215b';
+        return $this->getClient($syncRecord->getTransferWiseApiToken(),
+            $syncRecord->getTransferWiseApiEnvironment() ? TransferWiseApiService::API_ENVIRONMENT_PROD : TransferWiseApiService::API_ENVIRONMENT_DEV);
     }
 }
-
