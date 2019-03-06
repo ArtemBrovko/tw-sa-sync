@@ -1,12 +1,10 @@
 <?php
 /**
- * @author Artem Brovko <brovko.artem@gmail.com>
- * @copyright 2019 Artem Brovko
+ * @author Artem Brovko <artem.brovko@modera.net>
+ * @copyright 2019 Modera Foundation
  */
 
-
 namespace ArtemBro\TransferWiseApiBundle\Command;
-
 
 use App\Entity\SyncRecord;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
@@ -17,7 +15,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class GetTransfersCommand extends Command
+class GetProfiles extends Command
 {
     /**
      * @var TransferWiseApiService
@@ -32,11 +30,10 @@ class GetTransfersCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('transfer-wise:get-transfers')
-            ->setDescription('Get transfers')
-            ->addOption('profile-id', 'p', InputArgument::OPTIONAL)
+            ->setName('transfer-wise:get-profiles')
+            ->setDescription('Get user profiles')
             ->addArgument('syncRecord', InputArgument::REQUIRED)
-            ->addArgument('id', InputArgument::OPTIONAL, 'Transfer ID');
+            ->addArgument('id', InputArgument::OPTIONAL, 'Profile ID');
     }
 
     public function __construct(TransferWiseApiService $transferWiseService, EntityManagerInterface $entityManager)
@@ -56,9 +53,10 @@ class GetTransfersCommand extends Command
         $table = new Table($output);
 
         if ($input->hasArgument('id') && !empty($input->getArgument('id'))) {
-            $this->printTable($table, $client->getTransfer($input->getArgument('id')));
+            print_r($client->getProfile($input->getArgument('id')));
         } else {
-            $this->printTable($table, $client->getTransfers($input->getOption('profile-id')));
+            $this->printTable($table, $client->getProfiles());
+//            print_r($client->getProfiles());
         }
     }
 

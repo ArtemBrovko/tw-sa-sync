@@ -34,6 +34,100 @@ class Client
     }
 
     /**
+     * @return mixed
+     */
+    public function getPersonalProfile()
+    {
+//        $profilesRequest = $this->getProfiles();
+//        $response = $this->getRequestBody($profilesRequest);
+
+        //Stub
+        $response = '[{"id":2980,"type":"personal","details":{"firstName":"Artem","lastName":"Brovko","dateOfBirth":"1980-09-19","phoneNumber":"+442038087139","avatar":null,"occupation":null,"primaryAddress":7105100}},{"id":2981,"type":"business","details":{"name":"Artem Brovko Business","registrationNumber":"07209813","acn":null,"abn":null,"arbn":null,"companyType":"LIMITED","companyRole":"OWNER","descriptionOfBusiness":"IT_SERVICES","primaryAddress":7105101,"webpage":null}}]';
+
+        if ($response) {
+            $profiles = json_decode($response);
+
+            foreach ($profiles as $profile) {
+                if ($profile->type === TransferWiseApiService::PERSONAL_ACCOUNT_TYPE_NAME) {
+                    return $profile;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return mixed|ResponseInterface
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function getProfiles()
+    {
+        return json_decode($this->getRequestBody($this->makeRequest('profiles')));
+    }
+
+    /**
+     * @param ResponseInterface $request
+     *
+     * @return false|string
+     */
+    private function getRequestBody(ResponseInterface $request)
+    {
+        if ($request->getStatusCode() === 200) {
+            return $request->getBody()->getContents();
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param string $endpoint
+     * @param array $params
+     *
+     * @return mixed|ResponseInterface
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    private function makeRequest(string $endpoint, $params = array())
+    {
+        $client = $this->getGuzzleClient();
+
+        return $client->request('GET', $endpoint, $params);
+    }
+
+    /**
+     * @return \GuzzleHttp\Client
+     * @throws \Exception
+     */
+    private function getGuzzleClient()
+    {
+        $client = new \GuzzleHttp\Client(array(
+            /*            'defaults' => array(
+                            'verify' => false
+                        ),*/
+            'base_uri' => $this->getEndpointUrl(),
+            'headers'  => array(
+                'Authorization' => 'Bearer ' . $this->getAPIToken(),
+                'Content-Type'  => 'application/json'
+            )
+        ));
+
+        return $client;
+    }
+
+    /**
+     * @return string
+     * @throws \Exception
+     */
+    private function getEndpointUrl()
+    {
+        if ($this->env === TransferWiseApiService::API_ENVIRONMENT_PROD) {
+            return 'https://api.transferwise.com/v1/';
+        } else {
+            return 'https://api.sandbox.transferwise.tech/v1/';
+        }
+    }
+
+    /**
      * @return string
      */
     public function getApiToken(): string
@@ -50,36 +144,14 @@ class Client
     }
 
     /**
+     * @param $id
+     *
      * @return mixed
-     */
-    public function getPersonalProfile()
-    {
-//        $profilesRequest = $this->getProfiles();
-//        $response = $this->getRequestBody($profilesRequest);
-
-        //Stub
-        $response = '[{"id":2980,"type":"personal","details":{"firstName":"Artem","lastName":"Brovko","dateOfBirth":"1980-09-19","phoneNumber":"+442038087139","avatar":null,"occupation":null,"primaryAddress":7105100}},{"id":2981,"type":"business","details":{"name":"Artem Brovko Business","registrationNumber":"07209813","acn":null,"abn":null,"arbn":null,"companyType":"LIMITED","companyRole":"OWNER","descriptionOfBusiness":"IT_SERVICES","primaryAddress":7105101,"webpage":null}}]';
-
-        if ($response) {
-            $profiles = json_decode($response);
-
-            foreach ($profiles as $profile) {
-                if ($profile->type === self::PERSONAL_ACCOUNT_TYPE_NAME) {
-                    return $profile;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @return mixed|ResponseInterface
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function getProfiles()
+    public function getProfile($id)
     {
-        return $this->makeRequest('profiles');
+        return json_decode($this->getRequestBody($this->makeRequest('profiles/' . $id)));
     }
 
     /**
@@ -103,12 +175,18 @@ class Client
     }
 
     /**
+     * @param null $profile
+     *
      * @return mixed
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function getTransfers()
+    public function getTransfers($profile = null)
     {
-        return json_decode($this->getRequestBody($this->makeRequest('transfers')));
+        return json_decode($this->getRequestBody($this->makeRequest('transfers', [
+            'query' => [
+                'profile' => $profile,
+            ]
+        ])));
     }
 
     /**
@@ -177,6 +255,20 @@ class Client
     }
 
     /**
+     * @param string $endpoint
+     * @param array $params
+     *
+     * @return mixed|ResponseInterface
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    private function makePostRequest(string $endpoint, $params = array())
+    {
+        $client = $this->getGuzzleClient();
+
+        return $client->request('POST', $endpoint, $params);
+    }
+
+    /**
      * @param $startDate
      * @param $endDate
      * @param $status
@@ -210,81 +302,6 @@ class Client
         } while (count($rows) === $limit);
 
         return;
-    }
-
-    /**
-     * @param string $endpoint
-     * @param array $params
-     *
-     * @return mixed|ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    private function makeRequest(string $endpoint, $params = array())
-    {
-        $client = $this->getGuzzleClient();
-
-        return $client->request('GET', $endpoint, $params);
-    }
-
-    /**
-     * @param string $endpoint
-     * @param array $params
-     *
-     * @return mixed|ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    private function makePostRequest(string $endpoint, $params = array())
-    {
-        $client = $this->getGuzzleClient();
-
-        return $client->request('POST', $endpoint, $params);
-    }
-
-    /**
-     * @param ResponseInterface $request
-     *
-     * @return false|string
-     */
-    private function getRequestBody(ResponseInterface $request)
-    {
-        if ($request->getStatusCode() === 200) {
-            return $request->getBody()->getContents();
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    private function getEndpointUrl()
-    {
-        if ($this->env === TransferWiseApiService::API_ENVIRONMENT_PROD) {
-            return 'https://api.transferwise.com/v1/';
-        } else {
-            return 'https://api.sandbox.transferwise.tech/v1/';
-        }
-    }
-
-    /**
-     * @return \GuzzleHttp\Client
-     * @throws \Exception
-     */
-    private function getGuzzleClient()
-    {
-        $client = new \GuzzleHttp\Client(array(
-            /*            'defaults' => array(
-                            'verify' => false
-                        ),*/
-            'base_uri' => $this->getEndpointUrl(),
-            'headers'  => array(
-                'Authorization' => 'Bearer ' . $this->getAPIToken(),
-                'Content-Type'  => 'application/json'
-            )
-        ));
-
-        return $client;
     }
 
 
