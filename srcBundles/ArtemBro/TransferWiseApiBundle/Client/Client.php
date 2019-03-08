@@ -48,7 +48,7 @@ class Client
             $profiles = json_decode($response);
 
             foreach ($profiles as $profile) {
-                if ($profile->type === TransferWiseApiService::PERSONAL_ACCOUNT_TYPE_NAME) {
+                if ($profile->type === TransferWiseApiService::PROFILE_PERSONAL) {
                     return $profile;
                 }
             }
@@ -172,6 +172,50 @@ class Client
     public function getAccounts()
     {
         return json_decode($this->getRequestBody($this->makeRequest('accounts')));
+    }
+
+    /**
+     * @param $profileId
+     *
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function getBorderlessAccounts($profileId)
+    {
+        return json_decode($this->getRequestBody($this->makeRequest('borderless-accounts', [
+            'query' => [
+                'profileId' => $profileId,
+            ]
+        ])));
+    }
+
+    /**
+     * @param $accountId
+     * @param $currency string Currency code
+     * @param $intervalStart \DateTime
+     * @param $intervalEnd \DateTime
+     *
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function getBorderlessAccount($accountId, string $currency, \DateTime $intervalStart, \DateTime $intervalEnd)
+    {
+        return json_decode($this->getRequestBody($this->makeRequest('borderless-accounts/' . $accountId . '/statement.json', [
+            'query' => [
+                'currency' => $currency,
+                'intervalStart' => gmdate("Y-m-d\TH:i:s\Z", $intervalStart->getTimestamp()),
+                'intervalEnd' => gmdate("Y-m-d\TH:i:s\Z", $intervalEnd->getTimestamp())
+            ]
+        ])));
+    }
+
+    /**
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function getAvailableCurrencies()
+    {
+        return json_decode($this->getRequestBody($this->makeRequest('borderless-accounts/balance-currencies')));
     }
 
     /**

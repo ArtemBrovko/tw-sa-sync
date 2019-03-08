@@ -12,6 +12,7 @@ class Client
 
     private $name;
     private $vatPc;
+    private $bankAccount;
 
     /**
      * @return mixed
@@ -43,5 +44,21 @@ class Client
     public function setVatPc($vatPc): void
     {
         $this->vatPc = $vatPc;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getBankAccount()
+    {
+        return $this->bankAccount;
+    }
+
+    /**
+     * @param mixed $bankAccount
+     */
+    public function setBankAccount($bankAccount): void
+    {
+        $this->bankAccount = $bankAccount;
     }
 }

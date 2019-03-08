@@ -2,6 +2,7 @@
 
 namespace ArtemBro\SmartAccountsApiBundle\Service;
 
+use App\Entity\SyncRecord;
 use ArtemBro\SmartAccountsApiBundle\Client\Client;
 
 /**
@@ -11,18 +12,18 @@ use ArtemBro\SmartAccountsApiBundle\Client\Client;
 class SmartAccountsApiService
 {
 
+    /**
+     * @param SyncRecord $syncRecord
+     *
+     * @return Client
+     */
+    public function getClientForRecord(SyncRecord $syncRecord)
+    {
+        return $this->getClient($syncRecord->getSmartAccountsApiKeyPublic(), $syncRecord->getSmartAccountsApiKeyPrivate());
+    }
+
     public function getClient($apiKeyPublic, $apiKeyPrivate)
     {
         return new Client($apiKeyPublic, $apiKeyPrivate);
-    }
-
-    private function getApiKeyPublic()
-    {
-        return '60aa478772a141aba0ae';
-    }
-
-    private function getAPIKeyPrivate()
-    {
-        return 'bb5ebed5ce0d45f6b6b12701932c5468';
     }
 }

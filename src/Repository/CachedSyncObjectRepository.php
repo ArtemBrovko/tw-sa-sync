@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\CachedSyncObject;
+use App\Entity\SyncRecord;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 
@@ -19,22 +20,24 @@ class CachedSyncObjectRepository extends ServiceEntityRepository
         parent::__construct($registry, CachedSyncObject::class);
     }
 
-    // /**
-    //  * @return CachedSyncObject[] Returns an array of CachedSyncObject objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * @param $syncRecord SyncRecord
+     *
+     * @return string[] Returns an array of already synced
+     */
+    public function findBySyncRecord(SyncRecord $syncRecord)
     {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('c.id', 'ASC')
-            ->setMaxResults(10)
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.transferWiseId')
+            ->innerJoin('c.job', 'job')
+            ->andWhere('job.syncRecord = :val')
+            ->setParameter('val', $syncRecord)
             ->getQuery()
-            ->getResult()
+            ->getScalarResult()
         ;
+
+        return array_column($rows, 'transferWiseId');
     }
-    */
 
     /*
     public function findOneBySomeField($value): ?CachedSyncObject

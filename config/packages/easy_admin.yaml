@@ -15,9 +15,14 @@ easy_admin:
             - { entity: 'SyncRecord', default: true }
             - Job
             - User
+            - CachedSyncObject
 #        templates:
 #            field_boolean: ''
     entities:
+        CachedSyncObject:
+            class: App\Entity\CachedSyncObject
+            label: Synched records
+            disabled_actions: ['new']
         User:
             class: App\Entity\User
             label: Users
@@ -35,7 +40,7 @@ easy_admin:
         Job:
             class: App\Entity\Job
             label: 'Logs'
-            disabled_actions: ['new', 'delete', ]
+            disabled_actions: ['new', 'delete']
         SyncRecord:
             class: App\Entity\SyncRecord
             label: 'Synchronization records'
@@ -52,7 +57,7 @@ easy_admin:
                     - { property: 'transferWiseApiEnvironment', label: 'Production environment'}
             list:
                 actions:
-                    - { type: 'route', name: 'sync_record_run', icon: 'play-circle' }
+                    - { type: 'route', name: 'sync_record_run', icon: 'play-circle', label: 'Run'}
                 fields: ['id', 'name', 'active', { property: 'transferWiseApiEnvironment', label: 'Production environment'}, 'created', 'updated']
             search:
                 fields: ['id', 'name']

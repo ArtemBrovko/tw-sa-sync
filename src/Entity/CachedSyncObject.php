@@ -17,12 +17,12 @@ class CachedSyncObject
     private $id;
 
     /**
-     * @ORM\Column(type="bigint")
+     * @ORM\Column(type="string")
      */
     private $transferWiseId;
 
     /**
-     * @ORM\Column(type="bigint", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     private $smartAccountsId;
 
@@ -36,38 +36,26 @@ class CachedSyncObject
         return $this->id;
     }
 
-    public function getTransferWiseId(): ?int
+    public function getTransferWiseId(): ?string
     {
         return $this->transferWiseId;
     }
 
-    public function setTransferWiseId(int $transferWiseId): self
+    public function setTransferWiseId(string $transferWiseId): self
     {
         $this->transferWiseId = $transferWiseId;
 
         return $this;
     }
 
-    public function getSmartAccountsId(): ?int
+    public function getSmartAccountsId(): ?string
     {
         return $this->smartAccountsId;
     }
 
-    public function setSmartAccountsId(?int $smartAccountsId): self
+    public function setSmartAccountsId(?string $smartAccountsId): self
     {
         $this->smartAccountsId = $smartAccountsId;
-
-        return $this;
-    }
-
-    public function getJobId(): ?int
-    {
-        return $this->jobId;
-    }
-
-    public function setJobId(int $jobId): self
-    {
-        $this->jobId = $jobId;
 
         return $this;
     }
@@ -83,4 +71,11 @@ class CachedSyncObject
 
         return $this;
     }
+
+    public function __toString()
+    {
+        return $this->transferWiseId . ' ' . $this->smartAccountsId;
+    }
+
+
 }

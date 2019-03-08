@@ -15,7 +15,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class GetProfiles extends Command
+class GetAvailableCurrenciesCommand extends Command
 {
     /**
      * @var TransferWiseApiService
@@ -27,21 +27,20 @@ class GetProfiles extends Command
      */
     private $entityManager;
 
-    protected function configure()
-    {
-        $this
-            ->setName('transfer-wise:get-profiles')
-            ->setDescription('Get user profiles')
-            ->addArgument('syncRecord', InputArgument::REQUIRED)
-            ->addArgument('id', InputArgument::OPTIONAL, 'Profile ID');
-    }
-
     public function __construct(TransferWiseApiService $transferWiseService, EntityManagerInterface $entityManager)
     {
         $this->transferWiseService = $transferWiseService;
         $this->entityManager = $entityManager;
 
         parent::__construct();
+    }
+
+    protected function configure()
+    {
+        $this
+            ->setName('transfer-wise:get-available-currencies')
+            ->setDescription('Get available currencies from borderless account')
+            ->addArgument('syncRecord', InputArgument::REQUIRED);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -52,12 +51,7 @@ class GetProfiles extends Command
 
         $table = new Table($output);
 
-        if ($input->hasArgument('id') && !empty($input->getArgument('id'))) {
-            print_r($client->getProfile($input->getArgument('id')));
-        } else {
-            $this->printTable($table, $client->getProfiles());
-//            print_r($client->getProfiles());
-        }
+        $this->printTable($table, $client->getAvailableCurrencies());
     }
 
     private function printTable(Table $table, $json)
@@ -65,7 +59,7 @@ class GetProfiles extends Command
         if (count($json)) {
             $table->setHeaders(array_keys(get_object_vars($json[0])));
             foreach ($json as $row) {
-                $row->details = implode(';', array_values(get_object_vars($row->details)));
+//                $row->details = implode(';', array_values(get_object_vars($row->details)));
                 $table->addRow(array_values(get_object_vars($row)));
             }
             $table->render();

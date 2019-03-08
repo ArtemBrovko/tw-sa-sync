@@ -7,6 +7,7 @@
 namespace App\Service;
 
 
+use App\Entity\CachedSyncObject;
 use App\Entity\Job;
 use App\Entity\SyncRecord;
 use App\Sync\SyncResult;
@@ -61,21 +62,13 @@ class SyncService
      */
     public function sync(SyncRecord $syncRecord)
     {
-        $job = $this->startJob();
-
-        $cacheFile = __DIR__ . '/synced.txt';
-
-        if (file_exists($cacheFile)) {
-            $synced = explode(';', file_get_contents($cacheFile));
-        } else {
-            $synced = [];
-        }
+        $job = $this->startJob($syncRecord);
 
         $result = new SyncResult();
 
         $endDate = new \DateTime();
         $startDate = clone $endDate;
-        $startDate->sub(new \DateInterval('P1M'));
+        $startDate->sub(new \DateInterval('P1M2D'));
 
         $dateFormat = 'Y-m-d';
 
@@ -83,77 +76,110 @@ class SyncService
         $smartAccountsClient = $this->smartAccountsApiService->getClient($syncRecord->getSmartAccountsApiKeyPublic(), $syncRecord->getSmartAccountsApiKeyPrivate());
 
         try {
-            $saAccountName = 'Transferwise (holding)';
-            $targetAccount = $this->getSAAccountByName($smartAccountsClient, $saAccountName);
+            $saFallbackAccountName = 'Transferwise (holding)';
+            $saFallbackAccount = $this->getSAAccountByName($smartAccountsClient, $saFallbackAccountName);
 
-            $transferList = $transferWiseClient->getTransfersList($startDate->format($dateFormat), $endDate->format($dateFormat), TransferWiseApiService::TRANSFER_STATUS_OUTGOING_PAYMENT_SENT);
+            $currencies = $transferWiseClient->getAvailableCurrencies();
+            $profiles = $transferWiseClient->getProfiles();
 
-            foreach ($transferList as $item) {
-                if (in_array($item->id, $synced)) {
-                    $result->addSkipped($item->id, $item);
-                    continue;
-                }
+            foreach ($currencies as $currency) {
+                if ($currency->hasBankDetails) {
+                    foreach ($profiles as $profile) {
+                        if ($profile->type === TransferWiseApiService::PROFILE_BUSINESS) {
+                            $profileId = $profile->id;
+                            $currencyCode = $currency->code;
 
-                $account = $transferWiseClient->getAccount($item->targetAccount);
-                $accountName = $account->accountHolderName;
+                            $borderlessAccounts = $transferWiseClient->getBorderlessAccounts($profileId);
 
-                $page = 1;
-                $clientId = null;
-                do {
-                    $saCandidateClients = json_decode($smartAccountsClient->getClients($page++));
-                    if (property_exists($saCandidateClients, 'clients')) {
-                        foreach ($saCandidateClients->clients as $client) {
-                            if (property_exists($client, 'name') && $client->name === $accountName) {
-                                $clientId = $client->id;
+//                            print_r($borderlessAccounts);
+
+                            foreach ($borderlessAccounts as $borderlessAccount) {
+                                $accountDetails = $transferWiseClient->getBorderlessAccount($borderlessAccount->id, $currencyCode, $startDate, $endDate);
+
+//                                print_r($accountDetails);
+
+                                foreach ($accountDetails->transactions as $transaction) {
+                                    if ($this->shouldProcessTransaction($transaction)) {
+
+                                        $twRefNumber = $transaction->referenceNumber;
+
+                                        if ($this->isSynced($syncRecord, $twRefNumber)) {
+                                            $result->addSkipped($twRefNumber, $transaction);
+                                            $job->increaseSkipped();
+                                            continue;
+                                        }
+
+                                        $senderName = $transaction->details->senderName;
+
+                                        $page = 1;
+                                        $clientId = null;
+                                        do {
+                                            $saCandidateClients = json_decode($smartAccountsClient->getClients($page++));
+                                            if (property_exists($saCandidateClients, 'clients')) {
+                                                foreach ($saCandidateClients->clients as $client) {
+                                                    if (property_exists($client, 'name') && $client->name === $senderName) {
+                                                        $clientId = $client->id;
+                                                    }
+                                                }
+                                            }
+                                        } while ($saCandidateClients->hasMoreEntries);
+
+
+                                        if (!isset($clientId)) {
+                                            $saClient = new Client();
+                                            $saClient->setName($senderName);
+                                            if (!empty($transaction->details->senderAccount)) {
+                                                $saClient->setBankAccount($transaction->details->senderAccount);
+                                            }
+                                            $saClient->setVatPc(0);
+
+                                            $response = json_decode($smartAccountsClient->sendClient($saClient));
+
+                                            $clientId = $response->clientId;
+                                        }
+
+                                        $payment = new Payment();
+                                        $payment->setDate(new \DateTime($transaction->date));
+                                        $payment->setClientId($clientId);
+                                        $payment->setAccountType(AccountType::BANK);
+                                        $payment->setAccountName($saFallbackAccountName);
+                                        $payment->setAmount($transaction->amount->value);
+                                        $payment->setCurrency($transaction->amount->currency);
+                                        $payment->setExchangeRate(1);
+                                        $payment->setComment($transaction->details->description);
+                                        $payment->setNumber($twRefNumber);
+                                        $payment->setExtras([array(
+                                            'price'       => $transaction->amount->value,
+                                            'quantity'    => 1,
+                                            'description' => $transaction->details->description,
+                                            'account'     => $saFallbackAccount->account,
+                                        )]);
+
+                                        $response = $smartAccountsClient->sendPurchase($payment);
+
+                                        if ($response->getStatusCode() === 200) {
+                                            $jsonResponse = json_decode($response->getBody()->getContents());
+
+                                            $job->increaseAdded();
+                                            $result->addImported($twRefNumber, $transaction);
+                                            $this->saveSyncedRecord($job, $twRefNumber, $jsonResponse->paymentId);
+                                        } else {
+                                            $error = json_decode($response->getBody()->getContents());
+                                            if ($error && $error->errors) {
+                                                foreach ($error->errors as $currentError) {
+                                                    $result->addError($transaction->referenceNumber, $currentError->message);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
-                        }
-                    }
-                } while ($saCandidateClients->hasMoreEntries);
-
-                if (!isset($clientId)) {
-                    $saClient = new Client();
-                    $saClient->setName($accountName);
-                    $saClient->setVatPc(0);
-
-                    $response = json_decode($smartAccountsClient->sendClient($saClient));
-
-                    $clientId = $response->clientId;
-                }
-
-                $payment = new Payment();
-                $payment->setDate((new \DateTime($item->created))->format('d.m.Y'));
-                $payment->setClientId($clientId);
-                $payment->setAccountType(AccountType::BANK);
-                $payment->setAccountName($saAccountName);
-                $payment->setAmount($item->sourceValue);
-                $payment->setCurrency($item->sourceCurrency);
-                $payment->setExchangeRate(1);
-                $payment->setComment($item->id);
-                $payment->setExtras([array(
-                    'price'       => $item->sourceValue,
-                    'quantity'    => 1,
-                    'description' => 'Main purchase',
-                    'account'     => $targetAccount->account,
-                )]);
-
-                $response = $smartAccountsClient->sendPurchase($payment);
-
-                if ($response->getStatusCode() === 200) {
-                    $synced[] = $item->id;
-                    file_put_contents($cacheFile, implode(';', $synced));
-                    $result->addImported($item->id, $item);
-                } else {
-                    $error = json_decode($response->getBody()->getContents());
-                    if ($error && $error->errors) {
-                        foreach ($error->errors as $currentError) {
-                            $result->addError($item->id, $currentError->message);
-//                            print_r($payment);
                         }
                     }
                 }
             }
         } catch (\Exception $e) {
-            $job->addToLog(print_r($e, true));
+            $job->addToLog($e->getMessage() . "\n" . $e->getTraceAsString());
             throw $e;
         } finally {
             $this->finishJob($job);
@@ -163,14 +189,16 @@ class SyncService
     }
 
     /**
+     * @param SyncRecord $syncRecord
+     *
      * @return Job
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws \Exception
      */
-    private function startJob()
+    private function startJob(SyncRecord $syncRecord)
     {
         $job = new Job();
         $job->setStarted(new \DateTime());
+        $job->setSyncRecord($syncRecord);
 
         $this->em->persist($job);
         $this->em->flush();
@@ -243,13 +271,39 @@ class SyncService
         return null;
     }
 
-    private function isSynced($id)
+    private function isSynced(SyncRecord $syncRecord, $twRefNumber)
     {
+        static $synced;
 
+        if (!isset($synced)) {
+            $synced = [];
+        }
+
+        if (!isset($synced[$syncRecord->getId()])) {
+            $synced[$syncRecord->getId()] = $this->em->getRepository(CachedSyncObject::class)->findBySyncRecord($syncRecord);
+        }
+
+        return in_array($twRefNumber, $synced[$syncRecord->getId()]);
     }
 
-    private function setIsSynced($job, $recordId)
+    private function saveSyncedRecord(Job $job, $twReference, $saReference)
     {
+        $cachedSyncObject = new CachedSyncObject();
+        $cachedSyncObject->setJob($job)
+            ->setTransferWiseId($twReference)
+            ->setSmartAccountsId($saReference);
 
+        $this->em->persist($cachedSyncObject);
+        $this->em->flush();
+    }
+
+    private function shouldProcessTransaction($transaction)
+    {
+        return $transaction->type === TransferWiseApiService::TRANSACTION_TYPE_CREDIT &&
+            in_array($transaction->details->type, [
+                TransferWiseApiService::TRANSACTION_DETAILS_TYPE_CARD,
+                TransferWiseApiService::TRANSACTION_DETAILS_TYPE_DEPOSIT,
+                TransferWiseApiService::TRANSACTION_DETAILS_TYPE_TRANSFER,
+            ]);
     }
 }

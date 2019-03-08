@@ -32,6 +32,7 @@ class Payment
     private $amount;
     private $exchangeRate;
     private $comment;
+    private $number;
 
     /**
      * Payment constructor.
@@ -45,17 +46,33 @@ class Payment
     /**
      * @return mixed
      */
+    public function getNumber()
+    {
+        return $this->number;
+    }
+
+    /**
+     * @param mixed $number
+     */
+    public function setNumber($number): void
+    {
+        $this->number = $number;
+    }
+
+    /**
+     * @return mixed
+     */
     public function getDate()
     {
         return $this->date;
     }
 
     /**
-     * @param mixed $date
+     * @param \DateTime $date
      */
-    public function setDate($date): void
+    public function setDate(\DateTime $date): void
     {
-        $this->date = $date;
+        $this->date = $date->format('d.m.Y');
     }
 
     /**

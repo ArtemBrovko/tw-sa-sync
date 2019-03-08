@@ -12,7 +12,8 @@ use ArtemBro\TransferWiseApiBundle\Client\Client;
 
 class TransferWiseApiService
 {
-    const PERSONAL_ACCOUNT_TYPE_NAME = 'personal';
+    const PROFILE_PERSONAL = 'personal';
+    const PROFILE_BUSINESS = 'business';
 
     const API_ENVIRONMENT_DEV = 'dev';
     const API_ENVIRONMENT_PROD = 'prod';
@@ -24,16 +25,14 @@ class TransferWiseApiService
     const TRANSFER_STATUS_BOUNCED_BACK = 'bounced_back';
     const TRANSFER_STATUS_FUNDS_REFUNDED = 'funds_refunded';
 
-    /**
-     * @param $apiKey
-     * @param string $env
-     *
-     * @return Client
-     */
-    public function getClient($apiKey, $env = TransferWiseApiService::API_ENVIRONMENT_DEV)
-    {
-        return new Client($apiKey, $env);
-    }
+    const TRANSACTION_TYPE_CREDIT = 'CREDIT';
+    const TRANSACTION_TYPE_DEBIT = 'DEBIT';
+
+    const TRANSACTION_DETAILS_TYPE_CARD = 'CARD';
+    const TRANSACTION_DETAILS_TYPE_CONVERSION = 'CONVERSION';
+    const TRANSACTION_DETAILS_TYPE_DEPOSIT = 'DEPOSIT';
+    const TRANSACTION_DETAILS_TYPE_TRANSFER = 'TRANSFER';
+    const TRANSACTION_DETAILS_TYPE_MONEY_ADDED = 'MONEY_ADDED';
 
     /**
      * @param SyncRecord $syncRecord
@@ -44,5 +43,16 @@ class TransferWiseApiService
     {
         return $this->getClient($syncRecord->getTransferWiseApiToken(),
             $syncRecord->getTransferWiseApiEnvironment() ? TransferWiseApiService::API_ENVIRONMENT_PROD : TransferWiseApiService::API_ENVIRONMENT_DEV);
+    }
+
+    /**
+     * @param $apiKey
+     * @param string $env
+     *
+     * @return Client
+     */
+    public function getClient($apiKey, $env = TransferWiseApiService::API_ENVIRONMENT_DEV)
+    {
+        return new Client($apiKey, $env);
     }
 }

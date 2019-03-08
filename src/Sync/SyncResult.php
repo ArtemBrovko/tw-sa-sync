@@ -32,14 +32,14 @@ class SyncResult
     }
 
     /**
-     * @param int $imported
+     * @param $imported
      */
-    public function setImported(int $imported): void
+    public function setImported($imported): void
     {
         $this->imported = $imported;
     }
 
-    public function addImported(int $id, $data): void
+    public function addImported($id, $data): void
     {
         $this->imported[$id] = $data;
     }
@@ -53,14 +53,14 @@ class SyncResult
     }
 
     /**
-     * @param int $skipped
+     * @param $skipped
      */
-    public function setSkipped(int $skipped): void
+    public function setSkipped($skipped): void
     {
         $this->skipped = $skipped;
     }
 
-    public function addSkipped(int $id, $data): void
+    public function addSkipped($id, $data): void
     {
         $this->skipped[$id] = $data;
     }
@@ -81,10 +81,10 @@ class SyncResult
     }
 
     /**
-     * @param int $id
+     * @param $id
      * @param mixed $data
      */
-    public function addError(int $id, $data)
+    public function addError($id, $data)
     {
         if (!isset($this->errors[$id])) {
             $this->errors[$id] = [];

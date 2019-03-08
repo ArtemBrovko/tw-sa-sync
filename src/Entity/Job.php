@@ -38,8 +38,26 @@ class Job
      */
     private $cachedSyncObjects;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $added;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $skipped;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\SyncRecord", inversedBy="jobs")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $syncRecord;
+
     public function __construct()
     {
+        $this->added = 0;
+        $this->skipped = 0;
         $this->cachedSyncObjects = new ArrayCollection();
     }
 
@@ -118,6 +136,56 @@ class Job
                 $cachedSyncObject->setJob(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getAdded(): ?int
+    {
+        return $this->added;
+    }
+
+    public function setAdded(?int $added): self
+    {
+        $this->added = $added;
+
+        return $this;
+    }
+
+    public function increaseAdded(): self
+    {
+        ++$this->added;
+
+        return $this;
+    }
+
+    public function getSkipped(): ?int
+    {
+        return $this->skipped;
+    }
+
+    public function setSkipped(?int $skipped): self
+    {
+        $this->skipped = $skipped;
+
+        return $this;
+    }
+
+    public function increaseSkipped(): self
+    {
+        ++$this->skipped;
+
+        return $this;
+    }
+
+    public function getSyncRecord(): ?SyncRecord
+    {
+        return $this->syncRecord;
+    }
+
+    public function setSyncRecord(?SyncRecord $syncRecord): self
+    {
+        $this->syncRecord = $syncRecord;
 
         return $this;
     }

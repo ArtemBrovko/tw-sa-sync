@@ -12,6 +12,7 @@ use App\Service\SyncService;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -44,10 +45,15 @@ class SendInvoicesFromTWtoSACommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $syncRecords = $this->entityManager->getRepository(SyncRecord::class)->findAll();
+        $syncRecords = $this->entityManager->getRepository(SyncRecord::class)->findBy(['active' => true]);
+
+        $table = new Table($output->section());
+        $table->setHeaders(['ID', 'Name', 'Added', 'Skipped']);
+        $table->render();
 
         foreach ($syncRecords as $syncRecord) {
-            $output->writeln(print_r($this->syncService->sync($syncRecord), true));
+            $syncResult = $this->syncService->sync($syncRecord);
+            $table->appendRow([$syncRecord->getId(), $syncRecord->getName(), count($syncResult->getImported()), count($syncResult->getSkipped())]);
         }
     }
 }

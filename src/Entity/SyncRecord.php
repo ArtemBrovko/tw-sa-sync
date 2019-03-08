@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use Ambta\DoctrineEncryptBundle\Configuration\Encrypted;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -65,6 +67,16 @@ class SyncRecord
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $updated;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Job", mappedBy="syncRecord", orphanRemoval=true)
+     */
+    private $jobs;
+
+    public function __construct()
+    {
+        $this->jobs = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -185,5 +197,41 @@ class SyncRecord
     public function updateTimestamps()
     {
         $this->setUpdated(new \DateTime());
+    }
+
+    /**
+     * @return Collection|Job[]
+     */
+    public function getJobs(): Collection
+    {
+        return $this->jobs;
+    }
+
+    public function addJob(Job $job): self
+    {
+        if (!$this->jobs->contains($job)) {
+            $this->jobs[] = $job;
+            $job->setSyncRecord($this);
+        }
+
+        return $this;
+    }
+
+    public function removeJob(Job $job): self
+    {
+        if ($this->jobs->contains($job)) {
+            $this->jobs->removeElement($job);
+            // set the owning side to null (unless already changed)
+            if ($job->getSyncRecord() === $this) {
+                $job->setSyncRecord(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 }
