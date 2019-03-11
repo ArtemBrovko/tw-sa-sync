@@ -26,7 +26,17 @@ easy_admin:
         User:
             class: App\Entity\User
             label: Users
-            form:
+            new:
+                fields:
+                    - enabled
+                    - username
+#                    - usernameCanonical
+                    - email
+#                    - emailCanonical
+                    - { property: 'plainPassword', type: 'repeated', required: true, type_options: { type: Symfony\Component\Form\Extension\Core\Type\PasswordType, required: false, first_options: { label: Password }, second_options: { label: 'Repeat password' } } }
+#                    - groups
+#                    - roles
+            edit:
                 fields:
                     - username
                     - usernameCanonical

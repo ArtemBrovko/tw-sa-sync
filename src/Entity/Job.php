@@ -61,6 +61,11 @@ class Job
         $this->cachedSyncObjects = new ArrayCollection();
     }
 
+    public function __toString()
+    {
+        return 'Job #' . $this->getId() . ' of ' .  $this->getSyncRecord()->getName();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
