@@ -30,21 +30,19 @@ easy_admin:
                 fields:
                     - enabled
                     - username
-#                    - usernameCanonical
                     - email
-#                    - emailCanonical
+                    - { type: 'section', columns: 12, label: 'password'}
                     - { property: 'plainPassword', type: 'repeated', required: true, type_options: { type: Symfony\Component\Form\Extension\Core\Type\PasswordType, required: false, first_options: { label: Password }, second_options: { label: 'Repeat password' } } }
 #                    - groups
 #                    - roles
             edit:
                 fields:
-                    - username
-                    - usernameCanonical
-                    - email
-                    - emailCanonical
                     - enabled
+                    - username
+                    - email
+                    - { type: 'section', columns: 12, label: 'Password'}
+                    - { property: 'plainPassword', type: 'repeated', required: false, type_options: { type: Symfony\Component\Form\Extension\Core\Type\PasswordType, required: false, first_options: { label: Password }, second_options: { label: 'Repeat password' } } }
 #                    - groups
-                    - roles
             list:
                 fields: ['id', 'username', 'email', 'enabled', 'lastLogin']
         Job:
