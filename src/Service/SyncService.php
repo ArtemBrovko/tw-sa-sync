@@ -16,7 +16,6 @@ use ArtemBro\SmartAccountsApiBundle\Model\Enum\AccountType;
 use ArtemBro\SmartAccountsApiBundle\Model\Payment;
 use ArtemBro\SmartAccountsApiBundle\Service\SmartAccountsApiService;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 
 class SyncService
@@ -241,8 +240,10 @@ class SyncService
 
     private function shouldProcessTransaction($transaction)
     {
-        return $transaction->type === TransferWiseApiService::TRANSACTION_TYPE_CREDIT &&
-            in_array($transaction->details->type, [
+        return in_array($transaction->type, [
+                TransferWiseApiService::TRANSACTION_TYPE_CREDIT,
+                TransferWiseApiService::TRANSACTION_TYPE_DEBIT,
+            ]) && in_array($transaction->details->type, [
                 TransferWiseApiService::TRANSACTION_DETAILS_TYPE_CARD,
                 TransferWiseApiService::TRANSACTION_DETAILS_TYPE_DEPOSIT,
                 TransferWiseApiService::TRANSACTION_DETAILS_TYPE_TRANSFER,
