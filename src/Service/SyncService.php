@@ -318,6 +318,9 @@ class SyncService
             case TransferWiseApiService::TRANSACTION_DETAILS_TYPE_CARD:
                 return $transactionDetails->merchant->name;
 
+            case TransferWiseApiService::TRANSACTION_DETAILS_TYPE_TRANSFER:
+                return $transactionDetails->recipient->name;
+
             default:
                 return $transactionDetails->senderName;
         }
@@ -333,6 +336,9 @@ class SyncService
         switch ($transactionDetails->type) {
             case TransferWiseApiService::TRANSACTION_DETAILS_TYPE_CARD:
                 return null;
+
+            case TransferWiseApiService::TRANSACTION_DETAILS_TYPE_TRANSFER:
+                return $transactionDetails->recipient->bankAccount;
 
             default:
                 return $transactionDetails->senderAccount;

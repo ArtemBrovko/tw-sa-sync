@@ -133,6 +133,7 @@ class SyncRecordController extends AbstractController
 
             return $this->render('sync.html.twig', array(
                 'syncRecord'  => $syncRecord,
+                'isDryRun'    => false,
                 'imported'    => $syncResult->getImported(),
                 'skipped'     => $syncResult->getSkipped(),
                 'wontProcess' => $syncResult->getWontProcess(),
@@ -172,6 +173,7 @@ class SyncRecordController extends AbstractController
 
             return $this->render('sync.html.twig', array(
                 'syncRecord'  => $syncRecord,
+                'isDryRun'    => true,
                 'imported'    => $syncResult->getImported(),
                 'skipped'     => $syncResult->getSkipped(),
                 'wontProcess' => $syncResult->getWontProcess(),
