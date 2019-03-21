@@ -1,15 +1,89 @@
 {% extends '@EasyAdmin/default/layout.html.twig' %}
+{% import _self as tables %}
+
+{% macro tableRow(row) %}
+    <tr data-id="5">
+        <td class="string">{{ row.referenceNumber }}</td>
+        <td class="string">{{ row.type }}</td>
+        <td class="datetime">
+            <time datetime="{{ row.date }}" title="{{ row.date | date(constant('DATE_RFC822')) }}">
+                {{ row.date | date(constant('DATE_W3C')) }}
+            </time>
+        </td>
+        <td>{{ row.details.description }}</td>
+        <td class="string">{{ row.amount.value }} {{ row.amount.currency }}</td>
+    </tr>
+{% endmacro %}
+
+{% block content_title %}
+    Syncing #{{ syncRecord.id }} "{{ syncRecord.name }}"
+{% endblock %}
 
 {% block main %}
+    <div class="col-12">
 
-    <p>Successful imports: <b>{{ imported | length }}</b></p>
-    <p>Skipped records: <b>{{ skipped | length }}</b></p>
-    <p>Errors: <b>{{ errors | length }}</b></p>
-    <ul>
-        {% for key, messages in errors %}
-            {% for message in messages %}
-                <li><b>{{ key }}</b> - {{ message }}</li>
+        <dl class="row">
+            <dt class="col-sm-3">Successful imports:</dt>
+            <dd class="col-sm-9"><b>{{ imported | length }}</b></dd>
+
+            <dt class="col-sm-3">Skipped records:</dt>
+            <dd class="col-sm-9"><b>{{ skipped | length }}</b></dd>
+
+            <dt class="col-sm-3">Errors:</dt>
+            <dd class="col-sm-9"><b>{{ errors | length }}</b></dd>
+        </dl>
+
+        <ul>
+            {% for key, messages in errors %}
+                {% for message in messages %}
+                    <li><b>{{ key }}</b> - {{ message }}</li>
+                {% endfor %}
             {% endfor %}
+        </ul>
+
+    </div>
+    <table class="table datagrid">
+        <thead>
+        <tr>
+            <th class="string">Transferwise ID</th>
+            <th class="string">Type</th>
+            <th class="datetime">Date</th>
+            <th class="string">Description</th>
+            <th class="string">Amount</th>
+        </tr>
+        </thead>
+
+        <thead>
+        <tr>
+            <th colspan="5">Imported ({{ imported | length }})</th>
+        </tr>
+        </thead>
+        <tbody class="imported-rows">
+        {% for row in imported %}
+            {{ tables.tableRow(row) }}
         {% endfor %}
-    </ul>
+        </tbody>
+
+        <thead>
+        <tr>
+            <th colspan="5">Skipped ({{ skipped | length }})</th>
+        </tr>
+        </thead>
+        <tbody class="skipped-rows">
+        {% for row in skipped %}
+            {{ tables.tableRow(row) }}
+        {% endfor %}
+        </tbody>
+
+        <thead>
+        <tr>
+            <th colspan="5">Wont import ({{ wontProcess | length }})</th>
+        </tr>
+        </thead>
+        <tbody class="wont-import-rows">
+        {% for row in wontProcess %}
+            {{ tables.tableRow(row) }}
+        {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}

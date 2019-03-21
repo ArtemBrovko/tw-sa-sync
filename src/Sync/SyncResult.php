@@ -19,6 +19,11 @@ class SyncResult
     private $skipped = array();
 
     /**
+     * @var array
+     */
+    private $wontProcess = array();
+
+    /**
      * @var string[]
      */
     private $errors = array();
@@ -45,7 +50,9 @@ class SyncResult
     }
 
     /**
-     * @return int
+     * Returns transactions that were sync during previous sync runs
+     *
+     * @return array
      */
     public function getSkipped(): array
     {
@@ -60,10 +67,34 @@ class SyncResult
         $this->skipped = $skipped;
     }
 
+    /**
+     * Returns transactions that was not intended to be processed (not suitable for sync)
+     *
+     * @return array
+     */
+    public function getWontProcess(): array
+    {
+        return $this->wontProcess;
+    }
+
+    /**
+     * @param $skipped
+     */
+    public function setWontProcess($wontProcess): void
+    {
+        $this->wontProcess = $wontProcess;
+    }
+
     public function addSkipped($id, $data): void
     {
         $this->skipped[$id] = $data;
     }
+
+    public function addWontProcess($id, $data): void
+    {
+        $this->wontProcess[$id] = $data;
+    }
+
     /**
      * @return string[]
      */

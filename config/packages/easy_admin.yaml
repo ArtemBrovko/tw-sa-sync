@@ -7,7 +7,14 @@ easy_admin:
         brand_color: '#98c93c'
         assets:
             css:
+#                - 'bundles/easyadmin/bootstrap-all.css'
+                - 'https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css'
                 - 'css/admin.css'
+            js:
+#                - 'bundles/easyadmin/bootstrap-all.js'
+                - "https://code.jquery.com/jquery-3.3.1.slim.min.js"
+                - "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+                - "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
             favicon:
                 path: '/img/Favicon_-_1Office.png'
                 mime_type: 'image/png'
@@ -23,6 +30,9 @@ easy_admin:
             class: App\Entity\CachedSyncObject
             label: Synched records
             disabled_actions: ['new']
+            list:
+                actions:
+                    - show
         User:
             class: App\Entity\User
             label: Users
@@ -48,7 +58,11 @@ easy_admin:
         Job:
             class: App\Entity\Job
             label: 'Logs'
-            disabled_actions: ['new', 'delete']
+            disabled_actions: ['new', 'delete', 'edit']
+            list:
+                actions:
+                    - show
+
         SyncRecord:
             class: App\Entity\SyncRecord
             label: 'Synchronization records'
@@ -66,6 +80,7 @@ easy_admin:
             list:
                 actions:
                     - { type: 'route', name: 'sync_record_run', icon: 'play-circle', label: 'Run'}
+                    - { type: 'route', name: 'sync_record_dry_run', icon: 'play-circle', label: 'Dry run'}
                 fields: ['id', 'name', 'active', { property: 'transferWiseApiEnvironment', label: 'Production environment'}, 'created', 'updated']
             search:
                 fields: ['id', 'name']

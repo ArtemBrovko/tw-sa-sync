@@ -7,7 +7,6 @@ use App\Form\SyncRecordType;
 use App\Repository\SyncRecordRepository;
 use App\Service\SyncService;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -129,13 +128,61 @@ class SyncRecordController extends AbstractController
     {
         $syncService = $this->getSyncService();
 
-        $syncResult = $syncService->sync($syncRecord);
+        try {
+            $syncResult = $syncService->sync($syncRecord);
 
-        return $this->render('sync.html.twig', array(
-            'imported' => $syncResult->getImported(),
-            'skipped' => $syncResult->getSkipped(),
-            'errors' => $syncResult->getErrors()
-        ));
+            return $this->render('sync.html.twig', array(
+                'syncRecord'  => $syncRecord,
+                'imported'    => $syncResult->getImported(),
+                'skipped'     => $syncResult->getSkipped(),
+                'wontProcess' => $syncResult->getWontProcess(),
+                'errors'      => $syncResult->getErrors(),
+            ));
+        } catch (\Exception $e) {
+            return $this->render('error.html.twig', array(
+                'syncRecord' => $syncRecord,
+                'message'    => $e->getMessage(),
+            ));
+        }
+    }
+
+    /**
+     * @return SyncService
+     */
+    public function getSyncService(): SyncService
+    {
+        return $this->syncService;
+    }
+
+    /**
+     * @Route("/{id}/dryRun", name="sync_record_dry_run")
+     * @param Request $request
+     * @param SyncRecord $syncRecord
+     *
+     * @return Response
+     */
+    public function dryRun(Request $request, SyncRecord $syncRecord): Response
+    {
+        $syncService = $this->getSyncService();
+
+        $syncService->setDryRun(true);
+
+        try {
+            $syncResult = $syncService->sync($syncRecord);
+
+            return $this->render('sync.html.twig', array(
+                'syncRecord'  => $syncRecord,
+                'imported'    => $syncResult->getImported(),
+                'skipped'     => $syncResult->getSkipped(),
+                'wontProcess' => $syncResult->getWontProcess(),
+                'errors'      => $syncResult->getErrors(),
+            ));
+        } catch (\Exception $e) {
+            return $this->render('error.html.twig', array(
+                'syncRecord' => $syncRecord,
+                'message'    => $e->getMessage(),
+            ));
+        }
     }
 
     /**
@@ -193,13 +240,5 @@ class SyncRecordController extends AbstractController
             'skippedCount' => $skipped,
             'updatedCount' => $updated,
         ));
-    }
-
-    /**
-     * @return SyncService
-     */
-    public function getSyncService(): SyncService
-    {
-        return $this->syncService;
     }
 }

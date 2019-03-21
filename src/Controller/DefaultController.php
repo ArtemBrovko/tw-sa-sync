@@ -53,19 +53,6 @@ class DefaultController extends AbstractController
     }
 
     /**
-     * @Route("/sync")
-     */
-    public function syncAction()
-    {
-        $syncResult = $this->syncService->sync();
-        return $this->render('sync.html.twig', array(
-            'imported' => $syncResult->getImported(),
-            'skipped' => $syncResult->getSkipped(),
-            'errors' => $syncResult->getErrors()
-        ));
-    }
-
-    /**
      * @Route("/simulate")
      *
      * @throws \GuzzleHttp\Exception\GuzzleException

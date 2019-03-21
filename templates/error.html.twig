@@ -1,0 +1,11 @@
+{% extends '@EasyAdmin/default/layout.html.twig' %}
+
+{% block content_title %}
+    Error while synchronizing #{{ syncRecord.id }} "{{ syncRecord.name }}"
+{% endblock %}
+
+{% block main %}
+    <div class="col-12">
+        <p>{{ message }}</p>
+    </div>
+{% endblock %}
