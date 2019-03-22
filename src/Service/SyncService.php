@@ -106,7 +106,7 @@ class SyncService
                                         if ($this->shouldProcessTransaction($transaction)) {
 
                                             if ($this->isSynced($syncRecord, $twRefNumber)) {
-                                                $result->addSkipped($twRefNumber, $transaction);
+                                                $result->addSkipped($transaction);
                                                 $job->increaseSkipped();
                                                 continue;
                                             }
@@ -140,7 +140,7 @@ class SyncService
                                                     $jsonResponse = json_decode($response->getBody()->getContents());
 
                                                     $job->increaseAdded();
-                                                    $result->addImported($twRefNumber, $transaction);
+                                                    $result->addImported($transaction);
                                                     $this->saveSyncedRecord($job, $twRefNumber, $jsonResponse->paymentId, $transaction);
                                                 } else {
                                                     $error = json_decode($response->getBody()->getContents());
@@ -152,10 +152,10 @@ class SyncService
                                                 }
                                             } else {
                                                 $job->increaseAdded();
-                                                $result->addImported($twRefNumber, $transaction);
+                                                $result->addImported($transaction);
                                             }
                                         } else {
-                                            $result->addWontProcess($twRefNumber, $transaction);
+                                            $result->addWontProcess($transaction);
                                         }
                                     } catch (\Exception $e) {
                                         $result->addError($transaction->referenceNumber, $e->getMessage());

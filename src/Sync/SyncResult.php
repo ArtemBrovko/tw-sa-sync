@@ -44,9 +44,9 @@ class SyncResult
         $this->imported = $imported;
     }
 
-    public function addImported($id, $data): void
+    public function addImported($data): void
     {
-        $this->imported[$id] = $data;
+        $this->imported[] = $data;
     }
 
     /**
@@ -85,14 +85,14 @@ class SyncResult
         $this->wontProcess = $wontProcess;
     }
 
-    public function addSkipped($id, $data): void
+    public function addSkipped($data): void
     {
-        $this->skipped[$id] = $data;
+        $this->skipped[] = $data;
     }
 
-    public function addWontProcess($id, $data): void
+    public function addWontProcess($data): void
     {
-        $this->wontProcess[$id] = $data;
+        $this->wontProcess[] = $data;
     }
 
     /**
