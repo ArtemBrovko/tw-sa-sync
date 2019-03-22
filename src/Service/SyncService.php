@@ -97,7 +97,8 @@ class SyncService
                             $borderlessAccounts = $transferWiseClient->getBorderlessAccounts($profileId);
 
                             foreach ($borderlessAccounts as $borderlessAccount) {
-                                $accountDetails = $transferWiseClient->getBorderlessAccount($borderlessAccount->id, $currencyCode, $startDate, $endDate);
+                                $borderlessAccountId = $borderlessAccount->id;
+                                $accountDetails = $transferWiseClient->getBorderlessAccount($borderlessAccountId, $currencyCode, $startDate, $endDate);
 
                                 foreach ($accountDetails->transactions as $transaction) {
                                     $twRefNumber = $transaction->referenceNumber;
@@ -141,7 +142,12 @@ class SyncService
 
                                                     $job->increaseAdded();
                                                     $result->addImported($transaction);
-                                                    $this->saveSyncedRecord($job, $twRefNumber, $jsonResponse->paymentId, $transaction);
+                                                    $this->saveSyncedRecord($job,
+                                                        $jsonResponse->paymentId,
+                                                        $twRefNumber,
+                                                        $profileId,
+                                                        $borderlessAccountId,
+                                                        $transaction);
                                                 } else {
                                                     $error = json_decode($response->getBody()->getContents());
                                                     if ($error && $error->errors) {
@@ -345,13 +351,15 @@ class SyncService
         }
     }
 
-    private function saveSyncedRecord(Job $job, $twReference, $saReference, $transaction)
+    private function saveSyncedRecord(Job $job, $saReference, $twReference, $twProfileId, $twBorderlessAccountId, $twTransaction)
     {
         $cachedSyncObject = new CachedSyncObject();
         $cachedSyncObject->setJob($job)
-            ->setTransferWiseId($twReference)
             ->setSmartAccountsId($saReference)
-            ->setTwTransaction(json_encode($transaction));
+            ->setTransferWiseId($twReference)
+            ->setTwProfileId($twProfileId)
+            ->setTwBorderlessAccountId($twBorderlessAccountId)
+            ->setTwTransaction(json_encode($twTransaction));
 
         $this->em->persist($cachedSyncObject);
         $this->em->flush();

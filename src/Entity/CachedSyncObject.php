@@ -36,6 +36,16 @@ class CachedSyncObject
      */
     private $twTransaction;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $twProfileId;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $twBorderlessAccountId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -90,6 +100,30 @@ class CachedSyncObject
     public function setTwTransaction(?string $twTransaction): self
     {
         $this->twTransaction = $twTransaction;
+
+        return $this;
+    }
+
+    public function getTwProfileId(): ?string
+    {
+        return $this->twProfileId;
+    }
+
+    public function setTwProfileId(?string $twProfileId): self
+    {
+        $this->twProfileId = $twProfileId;
+
+        return $this;
+    }
+
+    public function getTwBorderlessAccountId(): ?string
+    {
+        return $this->twBorderlessAccountId;
+    }
+
+    public function setTwBorderlessAccountId(?string $twBorderlessAccountId): self
+    {
+        $this->twBorderlessAccountId = $twBorderlessAccountId;
 
         return $this;
     }
