@@ -31,6 +31,11 @@ class CachedSyncObject
      */
     private $job;
 
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $twTransaction;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -75,6 +80,18 @@ class CachedSyncObject
     public function __toString()
     {
         return $this->transferWiseId . ' ' . $this->smartAccountsId;
+    }
+
+    public function getTwTransaction(): ?string
+    {
+        return $this->twTransaction;
+    }
+
+    public function setTwTransaction(?string $twTransaction): self
+    {
+        $this->twTransaction = $twTransaction;
+
+        return $this;
     }
 
 

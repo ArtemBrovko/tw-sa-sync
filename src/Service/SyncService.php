@@ -141,7 +141,7 @@ class SyncService
 
                                                     $job->increaseAdded();
                                                     $result->addImported($twRefNumber, $transaction);
-                                                    $this->saveSyncedRecord($job, $twRefNumber, $jsonResponse->paymentId);
+                                                    $this->saveSyncedRecord($job, $twRefNumber, $jsonResponse->paymentId, $transaction);
                                                 } else {
                                                     $error = json_decode($response->getBody()->getContents());
                                                     if ($error && $error->errors) {
@@ -345,12 +345,13 @@ class SyncService
         }
     }
 
-    private function saveSyncedRecord(Job $job, $twReference, $saReference)
+    private function saveSyncedRecord(Job $job, $twReference, $saReference, $transaction)
     {
         $cachedSyncObject = new CachedSyncObject();
         $cachedSyncObject->setJob($job)
             ->setTransferWiseId($twReference)
-            ->setSmartAccountsId($saReference);
+            ->setSmartAccountsId($saReference)
+            ->setTwTransaction(json_encode($transaction));
 
         $this->em->persist($cachedSyncObject);
         $this->em->flush();
