@@ -38,7 +38,7 @@ class SyncService
     /**
      * @var boolean
      */
-    private $dryRun;
+    private $dryRun = true;
 
     /**
      * SyncService constructor.

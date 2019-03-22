@@ -127,13 +127,14 @@ class SyncRecordController extends AbstractController
     public function run(Request $request, SyncRecord $syncRecord): Response
     {
         $syncService = $this->getSyncService();
+        $syncService->setDryRun(false);
 
         try {
             $syncResult = $syncService->sync($syncRecord);
 
             return $this->render('sync.html.twig', array(
                 'syncRecord'  => $syncRecord,
-                'isDryRun'    => false,
+                'isDryRun'    => $syncService->isDryRun(),
                 'imported'    => $syncResult->getImported(),
                 'skipped'     => $syncResult->getSkipped(),
                 'wontProcess' => $syncResult->getWontProcess(),
@@ -173,7 +174,7 @@ class SyncRecordController extends AbstractController
 
             return $this->render('sync.html.twig', array(
                 'syncRecord'  => $syncRecord,
-                'isDryRun'    => true,
+                'isDryRun'    => $syncService->isDryRun(),
                 'imported'    => $syncResult->getImported(),
                 'skipped'     => $syncResult->getSkipped(),
                 'wontProcess' => $syncResult->getWontProcess(),
