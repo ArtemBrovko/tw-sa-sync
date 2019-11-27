@@ -75,8 +75,6 @@ class SyncService
         $startDate = clone $endDate;
         $startDate->sub(new \DateInterval('P1M2D'));
 
-        $dateFormat = 'Y-m-d';
-
         $transferWiseClient = $this->transferWiseService->getClientForRecord($syncRecord);
         $smartAccountsClient = $this->smartAccountsApiService->getClient($syncRecord->getSmartAccountsApiKeyPublic(), $syncRecord->getSmartAccountsApiKeyPrivate());
 
