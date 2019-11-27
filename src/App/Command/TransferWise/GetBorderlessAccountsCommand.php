@@ -1,14 +1,13 @@
 <?php
 /**
- * @author Artem Brovko <brovko.artem@gmail.com>
- * @copyright 2019 Artem Brovko
+ * @author Artem Brovko <artem.brovko@modera.net>
+ * @copyright 2019 Modera Foundation
  */
 
-
-namespace ArtemBro\TransferWiseApiBundle\Command;
-
+namespace App\Command\TransferWise;
 
 use App\Entity\SyncRecord;
+use App\Utils\TransferWiseClientTrait;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -16,8 +15,10 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class TransferProcessCommand extends Command
+class GetBorderlessAccountsCommand extends Command
 {
+    use TransferWiseClientTrait;
+
     /**
      * @var TransferWiseApiService
      */
@@ -28,15 +29,6 @@ class TransferProcessCommand extends Command
      */
     private $entityManager;
 
-    protected function configure()
-    {
-        $this
-            ->setName('transfer-wise:simulation:process')
-            ->setDescription('Simulate transfer processing')
-            ->addArgument('syncRecord', InputArgument::REQUIRED)
-            ->addArgument('id', InputArgument::OPTIONAL, 'Transfer ID');
-    }
-
     public function __construct(TransferWiseApiService $transferWiseService, EntityManagerInterface $entityManager)
     {
         $this->transferWiseService = $transferWiseService;
@@ -45,19 +37,24 @@ class TransferProcessCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     *
-     * @return int|void|null
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
+    protected function configure()
+    {
+        $this
+            ->setName('transfer-wise:get-borderless-accounts')
+            ->setDescription('Get borderless accounts')
+            ->addOption('profile-id', 'p', InputArgument::OPTIONAL)
+            ->addArgument('syncRecord', InputArgument::REQUIRED)
+            ->addArgument('id', InputArgument::OPTIONAL, 'Account ID');
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $syncRecord = $this->entityManager->getRepository(SyncRecord::class)->find($input->getArgument('syncRecord'));
 
-        $client = $this->transferWiseService->getClientForRecord($syncRecord);
+        $client = $this->getTAClientForRecord($this->transferWiseService, $syncRecord);
 
-        print_r($client->transferProcess($input->getArgument('id')));
+        $profileId = $input->getOption('profile-id');
+
+        print_r($client->getBorderlessAccounts($profileId));
     }
 }

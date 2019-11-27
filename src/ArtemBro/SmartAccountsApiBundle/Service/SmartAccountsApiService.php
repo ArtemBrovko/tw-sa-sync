@@ -11,17 +11,11 @@ use ArtemBro\SmartAccountsApiBundle\Client\Client;
  */
 class SmartAccountsApiService
 {
-
     /**
-     * @param SyncRecord $syncRecord
-     *
+     * @param $apiKeyPublic
+     * @param $apiKeyPrivate
      * @return Client
      */
-    public function getClientForRecord(SyncRecord $syncRecord)
-    {
-        return $this->getClient($syncRecord->getSmartAccountsApiKeyPublic(), $syncRecord->getSmartAccountsApiKeyPrivate());
-    }
-
     public function getClient($apiKeyPublic, $apiKeyPrivate)
     {
         return new Client($apiKeyPublic, $apiKeyPrivate);

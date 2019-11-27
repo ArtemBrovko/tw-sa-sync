@@ -5,20 +5,22 @@
  */
 
 
-namespace ArtemBro\TransferWiseApiBundle\Command;
+namespace App\Command\TransferWise;
 
 
 use App\Entity\SyncRecord;
+use App\Utils\TransferWiseClientTrait;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class GetTransfersCommand extends Command
+class GetAccountsCommand extends Command
 {
+    use TransferWiseClientTrait;
+
     /**
      * @var TransferWiseApiService
      */
@@ -32,11 +34,10 @@ class GetTransfersCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('transfer-wise:get-transfers')
+            ->setName('transfer-wise:get-accounts')
             ->setDescription('Get transfers')
-            ->addOption('profile-id', 'p', InputArgument::OPTIONAL)
             ->addArgument('syncRecord', InputArgument::REQUIRED)
-            ->addArgument('id', InputArgument::OPTIONAL, 'Transfer ID');
+            ->addArgument('id', InputArgument::OPTIONAL, 'Account ID');
     }
 
     public function __construct(TransferWiseApiService $transferWiseService, EntityManagerInterface $entityManager)
@@ -51,26 +52,12 @@ class GetTransfersCommand extends Command
     {
         $syncRecord = $this->entityManager->getRepository(SyncRecord::class)->find($input->getArgument('syncRecord'));
 
-        $client = $this->transferWiseService->getClientForRecord($syncRecord);
+        $client = $this->getTAClientForRecord($this->transferWiseService, $syncRecord);
 
-        $table = new Table($output);
-
-        if ($input->hasArgument('id') && !empty($input->getArgument('id'))) {
-            $this->printTable($table, $client->getTransfer($input->getArgument('id')));
+        if ($input->hasArgument('id')) {
+            print_r($client->getAccount($input->getArgument('id')));
         } else {
-            $this->printTable($table, $client->getTransfers($input->getOption('profile-id')));
-        }
-    }
-
-    private function printTable(Table $table, $json)
-    {
-        if (count($json)) {
-            $table->setHeaders(array_keys(get_object_vars($json[0])));
-            foreach ($json as $row) {
-                $row->details = implode(';', array_values(get_object_vars($row->details)));
-                $table->addRow(array_values(get_object_vars($row)));
-            }
-            $table->render();
+            print_r($client->getAccounts());
         }
     }
 }

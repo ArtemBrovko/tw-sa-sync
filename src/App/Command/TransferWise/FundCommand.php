@@ -5,10 +5,11 @@
  */
 
 
-namespace ArtemBro\TransferWiseApiBundle\Command;
+namespace App\Command\TransferWise;
 
 
 use App\Entity\SyncRecord;
+use App\Utils\TransferWiseClientTrait;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -18,6 +19,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class FundCommand extends Command
 {
+    use TransferWiseClientTrait;
+
     /**
      * @var TransferWiseApiService
      */
@@ -51,7 +54,7 @@ class FundCommand extends Command
 
         $syncRecord = $this->entityManager->getRepository(SyncRecord::class)->find($input->getArgument('syncRecord'));
 
-        $client = $this->transferWiseService->getClientForRecord($syncRecord);
+        $client = $this->getTAClientForRecord($this->transferWiseService, $syncRecord);
 
         $output->writeln(print_r($client->fund($paymentId), true));
     }

@@ -4,9 +4,11 @@
  * @copyright 2019 Modera Foundation
  */
 
-namespace ArtemBro\SmartAccountsApiBundle\Command;
+namespace App\Command\SmartAccounts;
 
 use App\Entity\SyncRecord;
+use App\Utils\PrintTableTrait;
+use App\Utils\SmartAccountClientTrait;
 use ArtemBro\SmartAccountsApiBundle\Service\SmartAccountsApiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -17,6 +19,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class GetClientsCommand extends Command
 {
+    use PrintTableTrait, SmartAccountClientTrait;
+
     /**
      * @var SmartAccountsApiService
      */
@@ -47,22 +51,10 @@ class GetClientsCommand extends Command
     {
         $syncRecord = $this->entityManager->getRepository(SyncRecord::class)->find($input->getArgument('syncRecord'));
 
-        $client = $this->smartAccountsApiService->getClientForRecord($syncRecord);
+        $client = $this->getSAClientForRecord($this->smartAccountsApiService, $syncRecord);
 
         $table = new Table($output);
 
         $this->printTable($table, $client->getProfiles());
-    }
-
-    private function printTable(Table $table, $json)
-    {
-        if (count($json)) {
-            $table->setHeaders(array_keys(get_object_vars($json[0])));
-            foreach ($json as $row) {
-                $row->details = implode(';', array_values(get_object_vars($row->details)));
-                $table->addRow(array_values(get_object_vars($row)));
-            }
-            $table->render();
-        }
     }
 }

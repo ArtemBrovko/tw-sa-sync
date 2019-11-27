@@ -5,19 +5,24 @@
  */
 
 
-namespace ArtemBro\TransferWiseApiBundle\Command;
+namespace App\Command\TransferWise;
 
 
 use App\Entity\SyncRecord;
+use App\Utils\PrintTableTrait;
+use App\Utils\TransferWiseClientTrait;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class TransferConvertFundsCommand extends Command
+class GetTransfersCommand extends Command
 {
+    use PrintTableTrait, TransferWiseClientTrait;
+
     /**
      * @var TransferWiseApiService
      */
@@ -31,17 +36,13 @@ class TransferConvertFundsCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('transfer-wise:simulation:convert-funds')
-            ->setDescription('Simulate funds convertion for transfer')
+            ->setName('transfer-wise:get-transfers')
+            ->setDescription('Get transfers')
+            ->addOption('profile-id', 'p', InputArgument::OPTIONAL)
             ->addArgument('syncRecord', InputArgument::REQUIRED)
             ->addArgument('id', InputArgument::OPTIONAL, 'Transfer ID');
     }
 
-    /**
-     * TWTransferConvertFundsCommand constructor.
-     *
-     * @param TransferWiseApiService $transferWiseService
-     */
     public function __construct(TransferWiseApiService $transferWiseService, EntityManagerInterface $entityManager)
     {
         $this->transferWiseService = $transferWiseService;
@@ -50,19 +51,18 @@ class TransferConvertFundsCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     *
-     * @return int|void|null
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $syncRecord = $this->entityManager->getRepository(SyncRecord::class)->find($input->getArgument('syncRecord'));
 
-        $client = $this->transferWiseService->getClientForRecord($syncRecord);
+        $client = $this->getTAClientForRecord($this->transferWiseService, $syncRecord);
 
-        print_r($client->transferConvertFunds($input->getArgument('id')));
+        $table = new Table($output);
+
+        if ($input->hasArgument('id') && !empty($input->getArgument('id'))) {
+            $this->printTable($table, $client->getTransfer($input->getArgument('id')));
+        } else {
+            $this->printTable($table, $client->getTransfers($input->getOption('profile-id')));
+        }
     }
 }

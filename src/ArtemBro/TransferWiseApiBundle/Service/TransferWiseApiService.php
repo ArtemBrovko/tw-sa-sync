@@ -35,17 +35,6 @@ class TransferWiseApiService
     const TRANSACTION_DETAILS_TYPE_MONEY_ADDED = 'MONEY_ADDED';
 
     /**
-     * @param SyncRecord $syncRecord
-     *
-     * @return Client
-     */
-    public function getClientForRecord(SyncRecord $syncRecord)
-    {
-        return $this->getClient($syncRecord->getTransferWiseApiToken(),
-            $syncRecord->getTransferWiseApiEnvironment() ? TransferWiseApiService::API_ENVIRONMENT_PROD : TransferWiseApiService::API_ENVIRONMENT_DEV);
-    }
-
-    /**
      * @param $apiKey
      * @param string $env
      *

@@ -11,6 +11,8 @@ use App\Entity\CachedSyncObject;
 use App\Entity\Job;
 use App\Entity\SyncRecord;
 use App\Sync\SyncResult;
+use App\Utils\SmartAccountClientTrait;
+use App\Utils\TransferWiseClientTrait;
 use ArtemBro\SmartAccountsApiBundle\Model\Client;
 use ArtemBro\SmartAccountsApiBundle\Model\Enum\AccountType;
 use ArtemBro\SmartAccountsApiBundle\Model\Payment;
@@ -20,6 +22,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class SyncService
 {
+    use TransferWiseClientTrait, SmartAccountClientTrait;
     /**
      * @var TransferWiseApiService
      */
@@ -75,8 +78,8 @@ class SyncService
         $startDate = clone $endDate;
         $startDate->sub(new \DateInterval('P1M2D'));
 
-        $transferWiseClient = $this->transferWiseService->getClientForRecord($syncRecord);
-        $smartAccountsClient = $this->smartAccountsApiService->getClient($syncRecord->getSmartAccountsApiKeyPublic(), $syncRecord->getSmartAccountsApiKeyPrivate());
+        $transferWiseClient = $this->getTAClientForRecord($this->transferWiseService, $syncRecord);
+        $smartAccountsClient = $this->getSAClientForRecord($this->smartAccountsApiService, $syncRecord);
 
         try {
             $saFallbackAccountName = 'Transferwise (holding)';

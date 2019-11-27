@@ -6,6 +6,7 @@ use App\Entity\SyncRecord;
 use App\Form\SyncRecordType;
 use App\Repository\SyncRecordRepository;
 use App\Service\SyncService;
+use App\Utils\TransferWiseClientTrait;
 use ArtemBro\TransferWiseApiBundle\Service\TransferWiseApiService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,6 +18,8 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class SyncRecordController extends AbstractController
 {
+    use TransferWiseClientTrait;
+
     /**
      * @var SyncService
      */
@@ -214,7 +217,7 @@ class SyncRecordController extends AbstractController
      */
     public function simulate(Request $request, SyncRecord $syncRecord)
     {
-        $transferWiseClient = $this->transferWiseApiService->getClientForRecord($syncRecord);
+        $transferWiseClient = $this->getTAClientForRecord($this->transferWiseApiService, $syncRecord);
 
         $transferId = $request->request->get('transferId');
         $transfer = $transferWiseClient->getTransfer($transferId);
