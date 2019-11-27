@@ -26,6 +26,12 @@
 {% block main %}
     <div class="col-12">
 
+        <div class="button-action">
+            <a class="btn btn-primary action-new" href="/admin/?action=new&amp;entity=SyncRecord&amp;menuIndex=0&amp;submenuIndex=-1&amp;sortField=id&amp;sortDirection=DESC&amp;page=1&amp;referer=%252Fadmin%252F%253Faction%253Dlist%2526entity%253DSyncRecord%2526menuIndex%253D0%2526submenuIndex%253D-1%2526sortField%253Did%2526sortDirection%253DDESC%2526page%253D1" target="_self">
+                Add SyncRecord
+            </a>
+        </div>
+
         <dl class="row">
             <dt class="col-sm-3">Successful imports:</dt>
             <dd class="col-sm-9"><b>{{ imported | length }}</b></dd>
@@ -93,4 +99,24 @@
         {% endfor %}
         </tbody>
     </table>
+
+{#
+    <section class="content-footer">
+        <div class="form-actions">
+            <a href="" class="btn btn-primary action-save">
+                <span class="btn-label">Save changes</span>
+            </a>
+
+
+
+            <a class=" btn btn-link pr-0 action-list" title="" href="{{ path('') }}" target="_self">{% trans %}action.list{% endtrans %}</a>
+
+        </div>
+    </section>
+#}
+    <div class="button-action">
+        <a class="btn btn-primary action-new" href="/admin/?action=new&amp;entity=SyncRecord&amp;menuIndex=0&amp;submenuIndex=-1&amp;sortField=id&amp;sortDirection=DESC&amp;page=1&amp;referer=%252Fadmin%252F%253Faction%253Dlist%2526entity%253DSyncRecord%2526menuIndex%253D0%2526submenuIndex%253D-1%2526sortField%253Did%2526sortDirection%253DDESC%2526page%253D1" target="_self">
+            Add SyncRecord
+        </a>
+    </div>
 {% endblock %}
